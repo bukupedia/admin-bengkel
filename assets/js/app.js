@@ -3,6 +3,7 @@
 import { renderNavbar } from "./components/navbar.js";
 import { initPelangganPage } from "./modules/pelanggan.js";
 import { initServisPage } from "./modules/servis.js";
+import { initSparepartPage } from "./modules/sparepart.js";
 // nanti tambah: servis, dashboard, dll
 
 document.addEventListener("DOMContentLoaded", () => {
