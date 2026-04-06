@@ -2,6 +2,7 @@
 
 import { renderNavbar } from "./components/navbar.js";
 import { initPelangganPage } from "./modules/pelanggan.js";
+import { initServisPage } from "./modules/servis.js";
 // nanti tambah: servis, dashboard, dll
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -12,6 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (page === "pelanggan") {
     initPelangganPage();
+  }
+  if (page === "servis") {
+    initServisPage();
   }
 
   // nanti:
