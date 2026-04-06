@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Servis</title>
+  <link href="assets/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+</head>
+<body data-page="servis">
+
+<div id="navbar"></div>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center">
+    <h3>Data Servis</h3>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalServis">
+      + Tambah Servis
+    </button>
+  </div>
+
+  <input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari pelanggan...">
+
+  <table class="table table-bordered mt-3">
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Pelanggan</th>
+        <th>Total</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody id="servisTable"></tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalServis">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Tambah Servis</h5>
+      </div>
+      <div class="modal-body">
+        <input id="tanggal" type="date" class="form-control mb-2">
+        <select id="customerSelect" class="form-control mb-2"></select>
+        <input id="total" type="number" class="form-control mb-2" placeholder="Total Biaya">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="saveServis">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/vendor/bootstrap.bundle.min.js"></script>
+</body>
+</html>
