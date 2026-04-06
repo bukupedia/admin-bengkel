@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Pelanggan</title>
+  <link href="assets/vendor/bootstrap.min.css" rel="stylesheet">
+</head>
+<body data-page="pelanggan">
+
+<div id="navbar"></div>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between">
+    <h3>Data Pelanggan</h3>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPelanggan">
+      + Tambah
+    </button>
+  </div>
+
+  <table class="table mt-3">
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>No HP</th>
+      </tr>
+    </thead>
+    <tbody id="pelangganTable"></tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalPelanggan">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5>Tambah Pelanggan</h5></div>
+      <div class="modal-body">
+        <input id="namaPelanggan" class="form-control mb-2" placeholder="Nama">
+        <input id="noHp" class="form-control" placeholder="No HP">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="savePelanggan">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/vendor/bootstrap.bundle.min.js"></script>
+</body>
+</html>
