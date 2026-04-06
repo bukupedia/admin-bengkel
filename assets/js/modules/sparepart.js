@@ -1,7 +1,7 @@
 // assets/js/modules/sparepart.js
 
 import { getData, saveData } from "../storage.js";
-import { generateId } from "../utils.js";
+import { generateId, sanitizeHTML, formatCurrency } from "../utils.js";
 
 const KEY = "parts";
 
@@ -21,15 +21,28 @@ function renderTable() {
   table.innerHTML = "";
 
   if (data.length === 0) {
-    table.innerHTML = `<tr><td colspan="2" class="text-center">Belum ada data</td></tr>`;
+    table.innerHTML = `<tr><td colspan="3" class="text-center py-4">
+      <div class="text-muted">
+        <p class="mb-1">⚙️</p>
+        <p>Belum ada data sparepart</p>
+        <small>Klik tombol "Tambah" untuk menambahkan sparepart</small>
+      </div>
+    </td></tr>`;
     return;
   }
 
   data.forEach(item => {
+    // Sanitize user input
+    const safeName = sanitizeHTML(item.name);
+    const safePrice = formatCurrency(item.price);
+    
     table.innerHTML += `
       <tr>
-        <td>${item.name}</td>
-        <td>Rp ${item.price.toLocaleString("id-ID")}</td>
+        <td>${safeName}</td>
+        <td>${safePrice}</td>
+        <td>
+          <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
+        </td>
       </tr>
     `;
   });
@@ -40,15 +53,27 @@ function renderTable() {
 // ======================
 function setupEvent() {
   const btnSave = document.getElementById("savePart");
+  const table = document.getElementById("partTable");
 
   btnSave.addEventListener("click", () => {
-    const name = document.getElementById("namaPart").value.trim();
-    const price = parseInt(document.getElementById("hargaPart").value);
+    const nameInput = document.getElementById("namaPart");
+    const priceInput = document.getElementById("hargaPart");
+    
+    const name = nameInput.value.trim();
+    const price = parseInt(priceInput.value);
 
-    if (!name || !price) {
-      alert("Lengkapi data");
+    // Validation
+    if (!name) {
+      nameInput.classList.add("is-invalid");
       return;
     }
+    nameInput.classList.remove("is-invalid");
+    
+    if (!price || price <= 0) {
+      priceInput.classList.add("is-invalid");
+      return;
+    }
+    priceInput.classList.remove("is-invalid");
 
     const newPart = {
       id: generateId(),
@@ -57,6 +82,14 @@ function setupEvent() {
     };
 
     const data = getData(KEY);
+    
+    // Check for duplicate name
+    const exists = data.some(p => p.name.toLowerCase() === name.toLowerCase());
+    if (exists) {
+      alert("Nama sparepart sudah ada!");
+      return;
+    }
+    
     data.push(newPart);
     saveData(KEY, data);
 
@@ -64,6 +97,26 @@ function setupEvent() {
     renderTable();
     closeModal();
   });
+  
+  // Table delete event
+  table.addEventListener("click", (e) => {
+    if (e.target.classList.contains("btn-delete")) {
+      const id = e.target.dataset.id;
+      deletePart(id);
+    }
+  });
+}
+
+// ======================
+// DELETE
+// ======================
+function deletePart(id) {
+  if (!confirm("Yakin ingin menghapus sparepart ini?")) return;
+  
+  let data = getData(KEY);
+  data = data.filter(item => item.id != id);
+  saveData(KEY, data);
+  renderTable();
 }
 
 // ======================
@@ -72,11 +125,17 @@ function setupEvent() {
 function clearForm() {
   document.getElementById("namaPart").value = "";
   document.getElementById("hargaPart").value = "";
+  
+  // Remove validation classes
+  document.getElementById("namaPart").classList.remove("is-invalid");
+  document.getElementById("hargaPart").classList.remove("is-invalid");
 }
 
 function closeModal() {
   const modal = bootstrap.Modal.getInstance(
     document.getElementById("modalPart")
   );
-  modal.hide();
+  if (modal) {
+    modal.hide();
+  }
 }
