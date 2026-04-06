@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "servis") {
     initServisPage();
   }
+  if (page === "sparepart") {
+    initSparepartPage();
+  }
 
   // nanti:
   // if (page === "servis") initServisPage();
