@@ -41,11 +41,24 @@
       <div class="modal-header">
         <h5>Tambah Servis</h5>
       </div>
+
       <div class="modal-body">
-        <input id="tanggal" type="date" class="form-control mb-2">
-        <select id="customerSelect" class="form-control mb-2"></select>
-        <input id="total" type="number" class="form-control mb-2" placeholder="Total Biaya">
-      </div>
+
+  <input id="tanggal" type="date" class="form-control mb-2">
+
+  <select id="customerSelect" class="form-control mb-3"></select>
+
+  <!-- ITEM LIST -->
+  <div id="itemContainer"></div>
+
+  <button class="btn btn-sm btn-secondary mb-3" id="addItem">
+    + Tambah Item
+  </button>
+
+  <!-- TOTAL -->
+  <h5>Total: <span id="totalDisplay">Rp 0</span></h5>
+
+</div>
       <div class="modal-footer">
         <button class="btn btn-primary" id="saveServis">Simpan</button>
       </div>
