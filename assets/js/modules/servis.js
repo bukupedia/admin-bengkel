@@ -5,6 +5,7 @@ import { generateId } from "../utils.js";
 
 const KEY = "servis";
 const CUSTOMER_KEY = "customers";
+const PART_KEY = "parts";
 
 // ======================
 // INIT
@@ -34,22 +35,61 @@ function renderCustomerDropdown() {
 // ======================
 function addItemRow() {
   const container = document.getElementById("itemContainer");
+  const parts = getData(PART_KEY);
 
   const row = document.createElement("div");
-  row.className = "d-flex gap-2 mb-2 item-row";
+  row.className = "row g-2 mb-2 item-row";
+
+  // dropdown options
+  let options = `<option value="">-- Pilih Sparepart --</option>`;
+  parts.forEach(p => {
+    options += `<option value="${p.id}" data-price="${p.price}">${p.name}</option>`;
+  });
 
   row.innerHTML = `
-    <input type="text" class="form-control item-name" placeholder="Nama item">
-    <input type="number" class="form-control item-price" placeholder="Harga">
-    <button class="btn btn-danger btn-remove">x</button>
+    <div class="col-md-4">
+      <select class="form-control part-select">
+        ${options}
+      </select>
+    </div>
+
+    <div class="col-md-3">
+      <input type="text" class="form-control item-name" placeholder="Atau nama manual">
+    </div>
+
+    <div class="col-md-3">
+      <input type="number" class="form-control item-price" placeholder="Harga">
+    </div>
+
+    <div class="col-md-2">
+      <button class="btn btn-danger w-100 btn-remove">x</button>
+    </div>
   `;
 
   container.appendChild(row);
 
-  // event price change
-  row.querySelector(".item-price").addEventListener("input", calculateTotal);
+  const select = row.querySelector(".part-select");
+  const nameInput = row.querySelector(".item-name");
+  const priceInput = row.querySelector(".item-price");
 
-  // remove item
+  // pilih sparepart → auto isi
+  select.addEventListener("change", () => {
+    const selected = select.options[select.selectedIndex];
+    const price = selected.dataset.price;
+    const name = selected.text;
+
+    if (price) {
+      priceInput.value = price;
+      nameInput.value = name;
+    }
+
+    calculateTotal();
+  });
+
+  // manual input → tetap dihitung
+  priceInput.addEventListener("input", calculateTotal);
+
+  // remove row
   row.querySelector(".btn-remove").addEventListener("click", () => {
     row.remove();
     calculateTotal();
