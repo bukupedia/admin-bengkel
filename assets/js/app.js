@@ -1,17 +1,26 @@
 // assets/js/app.js
 
+import { requireAuth } from "./modules/auth.js";
 import { renderNavbar } from "./components/navbar.js";
 import { initPelangganPage } from "./modules/pelanggan.js";
 import { initServisPage } from "./modules/servis.js";
 import { initSparepartPage } from "./modules/sparepart.js";
-// nanti tambah: servis, dashboard, dll
+import { initDashboardPage } from "./modules/dashboard.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ Protect all pages - redirect to login if not authenticated
+  if (!requireAuth()) {
+    return;
+  }
+  
   // ✅ render navbar di semua halaman
   renderNavbar();
 
   const page = document.body.dataset.page;
 
+  if (page === "dashboard") {
+    initDashboardPage();
+  }
   if (page === "pelanggan") {
     initPelangganPage();
   }
@@ -21,8 +30,4 @@ document.addEventListener("DOMContentLoaded", () => {
   if (page === "sparepart") {
     initSparepartPage();
   }
-
-  // nanti:
-  // if (page === "servis") initServisPage();
-  // if (page === "dashboard") initDashboard();
 });
