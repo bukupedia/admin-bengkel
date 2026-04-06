@@ -1,11 +1,20 @@
 // assets/js/app.js
 
+import { renderNavbar } from "./components/navbar.js";
 import { initPelangganPage } from "./modules/pelanggan.js";
+// nanti tambah: servis, dashboard, dll
 
 document.addEventListener("DOMContentLoaded", () => {
+  // ✅ render navbar di semua halaman
+  renderNavbar();
+
   const page = document.body.dataset.page;
 
   if (page === "pelanggan") {
     initPelangganPage();
   }
+
+  // nanti:
+  // if (page === "servis") initServisPage();
+  // if (page === "dashboard") initDashboard();
 });
