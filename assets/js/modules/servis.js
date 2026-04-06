@@ -23,28 +23,31 @@ function renderCustomerDropdown() {
   select.innerHTML = `<option value="">-- Pilih Pelanggan --</option>`;
 
   customers.forEach(c => {
-    select.innerHTML += `
-      <option value="${c.id}">${c.name}</option>
-    `;
+    select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
   });
 }
 
 // ======================
 // RENDER TABLE
 // ======================
-function renderTable() {
+function renderTable(filter = "") {
   const data = getData(KEY);
   const customers = getData(CUSTOMER_KEY);
   const table = document.getElementById("servisTable");
 
   table.innerHTML = "";
 
-  if (data.length === 0) {
-    table.innerHTML = `<tr><td colspan="4" class="text-center">Belum ada data</td></tr>`;
+  const filtered = data.filter(item => {
+    const customer = customers.find(c => c.id == item.customerId);
+    return customer?.name.toLowerCase().includes(filter.toLowerCase());
+  });
+
+  if (filtered.length === 0) {
+    table.innerHTML = `<tr><td colspan="5" class="text-center">Tidak ada data</td></tr>`;
     return;
   }
 
-  data.forEach(item => {
+  filtered.forEach(item => {
     const customer = customers.find(c => c.id == item.customerId);
 
     table.innerHTML += `
@@ -57,6 +60,14 @@ function renderTable() {
             ${item.status}
           </span>
         </td>
+        <td>
+          <button class="btn btn-sm btn-success btn-selesai" data-id="${item.id}">
+            ✓
+          </button>
+          <button class="btn btn-sm btn-danger btn-delete" data-id="${item.id}">
+            🗑
+          </button>
+        </td>
       </tr>
     `;
   });
@@ -67,7 +78,10 @@ function renderTable() {
 // ======================
 function setupEvent() {
   const btnSave = document.getElementById("saveServis");
+  const searchInput = document.getElementById("searchServis");
+  const table = document.getElementById("servisTable");
 
+  // SAVE
   btnSave.addEventListener("click", () => {
     const tanggal = document.getElementById("tanggal").value;
     const customerId = document.getElementById("customerSelect").value;
@@ -94,10 +108,60 @@ function setupEvent() {
     renderTable();
     closeModal();
   });
+
+  // SEARCH
+  searchInput.addEventListener("keyup", (e) => {
+    renderTable(e.target.value);
+  });
+
+  // EVENT DELEGATION (BUTTON DI TABLE)
+  table.addEventListener("click", (e) => {
+    const id = e.target.dataset.id;
+
+    // SELESAI
+    if (e.target.classList.contains("btn-selesai")) {
+      updateStatus(id);
+    }
+
+    // DELETE
+    if (e.target.classList.contains("btn-delete")) {
+      deleteServis(id);
+    }
+  });
 }
 
 // ======================
-// UTIL UI
+// UPDATE STATUS
+// ======================
+function updateStatus(id) {
+  let data = getData(KEY);
+
+  data = data.map(item => {
+    if (item.id == id) {
+      item.status = "selesai";
+    }
+    return item;
+  });
+
+  saveData(KEY, data);
+  renderTable();
+}
+
+// ======================
+// DELETE
+// ======================
+function deleteServis(id) {
+  if (!confirm("Hapus data ini?")) return;
+
+  let data = getData(KEY);
+  data = data.filter(item => item.id != id);
+
+  saveData(KEY, data);
+  renderTable();
+}
+
+// ======================
+// UTIL
 // ======================
 function clearForm() {
   document.getElementById("tanggal").value = "";
