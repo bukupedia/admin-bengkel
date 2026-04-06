@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Sparepart</title>
+  <link href="assets/vendor/bootstrap.min.css" rel="stylesheet">
+</head>
+<body data-page="sparepart">
+
+<div id="navbar"></div>
+
+<div class="container mt-4">
+  <div class="d-flex justify-content-between">
+    <h3>Sparepart</h3>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalPart">
+      + Tambah
+    </button>
+  </div>
+
+  <table class="table mt-3">
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Harga</th>
+      </tr>
+    </thead>
+    <tbody id="partTable"></tbody>
+  </table>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalPart">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5>Tambah Sparepart</h5></div>
+      <div class="modal-body">
+        <input id="namaPart" class="form-control mb-2" placeholder="Nama Part">
+        <input id="hargaPart" type="number" class="form-control" placeholder="Harga">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="savePart">Simpan</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/app.js"></script>
+<script src="assets/vendor/bootstrap.bundle.min.js"></script>
+</body>
+</html>
