@@ -2,6 +2,7 @@
 
 export function renderNavbar() {
   const navbar = document.getElementById("navbar");
+  const currentPage = document.body.dataset.page;
 
   if (!navbar) return;
 
@@ -21,7 +22,7 @@ export function renderNavbar() {
           <ul class="navbar-nav ms-auto">
 
             <li class="nav-item">
-              <a class="nav-link" href="dashboard.html">Dashboard</a>
+              <a class="nav-link ${currentPage === "dashboard" ? "active" : ""}" href="dashboard.html">Dashboard</a>
             </li>
 
             <li class="nav-item">
