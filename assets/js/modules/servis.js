@@ -1,7 +1,7 @@
 // assets/js/modules/servis.js
 
 import { getData, saveData } from "../storage.js";
-import { generateId } from "../utils.js";
+import { generateId, sanitizeHTML, formatCurrency, formatDate } from "../utils.js";
 
 const KEY = "servis";
 const CUSTOMER_KEY = "customers";
@@ -15,18 +15,31 @@ export function initServisPage() {
   renderTable();
   setupEvent();
   addItemRow(); // default 1 row
+  setupSearch();
+}
+
+// ======================
+// SEARCH FUNCTIONALITY
+// ======================
+function setupSearch() {
+  const searchInput = document.getElementById("searchServis");
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value.toLowerCase();
+    renderTable(query);
+  });
 }
 
 // ======================
 // DROPDOWN CUSTOMER
 // ======================
-function renderCustomerDropdown() {
-  const customers = getData(CUSTOMER_KEY);
+function renderCustomerDropdown(customers = null) {
+  const custData = customers || getData(CUSTOMER_KEY);
   const select = document.getElementById("customerSelect");
 
   select.innerHTML = `<option value="">-- Pilih Pelanggan --</option>`;
-  customers.forEach(c => {
-    select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+  custData.forEach(c => {
+    const safeName = sanitizeHTML(c.name);
+    select.innerHTML += `<option value="${c.id}">${safeName}</option>`;
   });
 }
 
@@ -43,7 +56,8 @@ function addItemRow() {
   // dropdown options
   let options = `<option value="">-- Pilih Sparepart --</option>`;
   parts.forEach(p => {
-    options += `<option value="${p.id}" data-price="${p.price}">${p.name}</option>`;
+    const safeName = sanitizeHTML(p.name);
+    options += `<option value="${p.id}" data-price="${p.price}">${safeName}</option>`;
   });
 
   row.innerHTML = `
@@ -58,11 +72,11 @@ function addItemRow() {
     </div>
 
     <div class="col-md-3">
-      <input type="number" class="form-control item-price" placeholder="Harga">
+      <input type="number" class="form-control item-price" placeholder="Harga" min="0">
     </div>
 
     <div class="col-md-2">
-      <button class="btn btn-danger w-100 btn-remove">x</button>
+      <button class="btn btn-danger w-100 btn-remove">✕</button>
     </div>
   `;
 
@@ -108,7 +122,7 @@ function calculateTotal() {
   });
 
   document.getElementById("totalDisplay").innerText =
-    "Rp " + total.toLocaleString("id-ID");
+    formatCurrency(total);
 
   return total;
 }
@@ -116,34 +130,54 @@ function calculateTotal() {
 // ======================
 // RENDER TABLE
 // ======================
-function renderTable() {
+function renderTable(searchQuery = "") {
   const data = getData(KEY);
   const customers = getData(CUSTOMER_KEY);
   const table = document.getElementById("servisTable");
 
   table.innerHTML = "";
 
-  if (data.length === 0) {
-    table.innerHTML = `<tr><td colspan="5" class="text-center">Belum ada data</td></tr>`;
+  // Filter by search query
+  let filteredData = data;
+  if (searchQuery) {
+    filteredData = data.filter(item => {
+      const customer = customers.find(c => c.id == item.customerId);
+      const customerName = customer ? customer.name.toLowerCase() : "";
+      return customerName.includes(searchQuery);
+    });
+  }
+
+  if (filteredData.length === 0) {
+    table.innerHTML = `<tr><td colspan="5" class="text-center py-4">
+      <div class="text-muted">
+        <p class="mb-1">🔧</p>
+        <p>${searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data servis"}</p>
+        <small>${searchQuery ? "Coba kata kunci lain" : "Klik tombol 'Tambah Servis' untuk menambah data"}</small>
+      </div>
+    </td></tr>`;
     return;
   }
 
-  data.forEach(item => {
+  filteredData.forEach(item => {
     const customer = customers.find(c => c.id == item.customerId);
+    const customerName = customer ? sanitizeHTML(customer.name) : "-";
+    const safeTanggal = sanitizeHTML(item.tanggal);
 
+    const statusClass = item.status === "selesai" ? "success" : "warning";
+    const statusText = item.status === "selesai" ? "Selesai" : "Proses";
+    
     table.innerHTML += `
       <tr>
-        <td>${item.tanggal}</td>
-        <td>${customer ? customer.name : "-"}</td>
-        <td>Rp ${item.total.toLocaleString("id-ID")}</td>
+        <td>${formatDate(safeTanggal)}</td>
+        <td>${customerName}</td>
+        <td>${formatCurrency(item.total)}</td>
         <td>
-          <span class="badge bg-${item.status === "selesai" ? "success" : "warning"}">
-            ${item.status}
-          </span>
+          <span class="badge bg-${statusClass}">${statusText}</span>
         </td>
         <td>
-          <button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}">✓</button>
-          <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}">🗑</button>
+          <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
+          ${item.status !== "selesai" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
+          <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
         </td>
       </tr>
     `;
@@ -163,13 +197,16 @@ function setupEvent() {
 
   // save
   btnSave.addEventListener("click", () => {
-    const tanggal = document.getElementById("tanggal").value;
-    const customerId = document.getElementById("customerSelect").value;
+    const tanggalInput = document.getElementById("tanggal");
+    const customerSelect = document.getElementById("customerSelect");
+    
+    const tanggal = tanggalInput.value;
+    const customerId = customerSelect.value;
 
     const items = [];
 
     document.querySelectorAll(".item-row").forEach(row => {
-      const name = row.querySelector(".item-name").value;
+      const name = row.querySelector(".item-name").value.trim();
       const price = parseInt(row.querySelector(".item-price").value);
 
       if (name && price) {
@@ -177,8 +214,21 @@ function setupEvent() {
       }
     });
 
-    if (!tanggal || !customerId || items.length === 0) {
-      alert("Lengkapi data");
+    // Validation
+    if (!tanggal) {
+      tanggalInput.classList.add("is-invalid");
+      return;
+    }
+    tanggalInput.classList.remove("is-invalid");
+    
+    if (!customerId) {
+      customerSelect.classList.add("is-invalid");
+      return;
+    }
+    customerSelect.classList.remove("is-invalid");
+    
+    if (items.length === 0) {
+      alert("Tambahkan minimal satu item servis");
       return;
     }
 
@@ -205,6 +255,7 @@ function setupEvent() {
   // table action
   table.addEventListener("click", (e) => {
     const id = e.target.dataset.id;
+    if (!id) return;
 
     if (e.target.classList.contains("btn-delete")) {
       deleteServis(id);
@@ -213,14 +264,47 @@ function setupEvent() {
     if (e.target.classList.contains("btn-selesai")) {
       updateStatus(id);
     }
+    
+    if (e.target.classList.contains("btn-view")) {
+      showDetail(id);
+    }
   });
+}
+
+// ======================
+// SHOW DETAIL
+// ======================
+function showDetail(id) {
+  const data = getData(KEY);
+  const customers = getData(CUSTOMER_KEY);
+  
+  const servis = data.find(s => s.id == id);
+  if (!servis) return;
+  
+  const customer = customers.find(c => c.id == servis.customerId);
+  
+  document.getElementById("detailCustomer").textContent = customer ? customer.name : "-";
+  document.getElementById("detailTanggal").textContent = formatDate(servis.tanggal);
+  document.getElementById("detailStatus").textContent = servis.status === "selesai" ? "Selesai" : "Proses";
+  document.getElementById("detailTotal").textContent = formatCurrency(servis.total);
+  
+  const itemsList = document.getElementById("detailItems");
+  itemsList.innerHTML = servis.items.map(item => `
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      ${sanitizeHTML(item.name)}
+      <span class="badge bg-primary rounded-pill">${formatCurrency(item.price)}</span>
+    </li>
+  `).join('');
+  
+  const modal = new bootstrap.Modal(document.getElementById("modalDetail"));
+  modal.show();
 }
 
 // ======================
 // DELETE
 // ======================
 function deleteServis(id) {
-  if (!confirm("Hapus data?")) return;
+  if (!confirm("Yakin ingin menghapus data servis ini?")) return;
 
   let data = getData(KEY);
   data = data.filter(item => item.id != id);
@@ -251,7 +335,11 @@ function resetForm() {
   document.getElementById("tanggal").value = "";
   document.getElementById("customerSelect").value = "";
   document.getElementById("itemContainer").innerHTML = "";
-  document.getElementById("totalDisplay").innerText = "Rp 0";
+  document.getElementById("totalDisplay").innerText = formatCurrency(0);
+  
+  // Remove validation classes
+  document.getElementById("tanggal").classList.remove("is-invalid");
+  document.getElementById("customerSelect").classList.remove("is-invalid");
 
   addItemRow();
 }
@@ -263,5 +351,7 @@ function closeModal() {
   const modal = bootstrap.Modal.getInstance(
     document.getElementById("modalServis")
   );
-  modal.hide();
+  if (modal) {
+    modal.hide();
+  }
 }
