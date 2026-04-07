@@ -11,6 +11,10 @@ const PART_KEY = "parts";
 // INIT
 // ======================
 export function initServisPage() {
+  // Set today's date as default
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("tanggal").value = today;
+  
   renderCustomerDropdown();
   renderTable();
   setupEvent();
