@@ -21,18 +21,20 @@
 
   <input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari pelanggan...">
 
-  <table class="table table-bordered mt-3">
-    <thead>
-      <tr>
-        <th>Tanggal</th>
-        <th>Pelanggan</th>
-        <th>Total</th>
-        <th>Status</th>
-        <th>Aksi</th>
-      </tr>
-    </thead>
-    <tbody id="servisTable"></tbody>
-  </table>
+  <div class="table-responsive">
+    <table class="table table-bordered mt-3">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Pelanggan</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="servisTable"></tbody>
+    </table>
+  </div>
 </div>
 
 <!-- Modal -->
@@ -41,6 +43,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h5>Tambah Servis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
@@ -73,6 +76,7 @@
       
       <div class="modal-header">
         <h5>Detail Servis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
