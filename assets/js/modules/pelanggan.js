@@ -36,9 +36,9 @@ function renderTable() {
     
     table.innerHTML += `
       <tr>
-        <td>${safeName}</td>
-        <td>${safePhone}</td>
-        <td>
+        <td data-label="Nama">${safeName}</td>
+        <td data-label="No HP">${safePhone}</td>
+        <td data-label="Aksi">
           <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
         </td>
       </tr>
