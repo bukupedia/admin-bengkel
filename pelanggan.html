@@ -19,12 +19,15 @@
     </button>
   </div>
 
+  <input type="text" id="searchPelanggan" class="form-control mt-3" placeholder="Cari pelanggan...">
+
   <div class="table-responsive">
     <table class="table mt-3 table-hover">
       <thead class="table-light">
         <tr>
           <th>Nama</th>
           <th>No HP</th>
+          <th>No. Polisi</th>
           <th>Aksi</th>
         </tr>
       </thead>
@@ -42,7 +45,8 @@
       </div>
       <div class="modal-body">
         <input id="namaPelanggan" class="form-control mb-2" placeholder="Nama">
-        <input id="noHp" class="form-control" placeholder="No HP">
+        <input id="noHp" class="form-control mb-2" placeholder="No HP">
+        <input id="nomorPolisi" class="form-control" placeholder="Nomor Polisi Kendaraan">
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" id="savePelanggan">Simpan</button>
