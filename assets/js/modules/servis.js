@@ -168,13 +168,13 @@ function renderTable(searchQuery = "") {
     
     table.innerHTML += `
       <tr>
-        <td>${formatDate(safeTanggal)}</td>
-        <td>${customerName}</td>
-        <td>${formatCurrency(item.total)}</td>
-        <td>
+        <td data-label="Tanggal">${formatDate(safeTanggal)}</td>
+        <td data-label="Pelanggan">${customerName}</td>
+        <td data-label="Total">${formatCurrency(item.total)}</td>
+        <td data-label="Status">
           <span class="badge bg-${statusClass}">${statusText}</span>
         </td>
-        <td>
+        <td data-label="Aksi">
           <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
           ${item.status !== "selesai" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
           <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
