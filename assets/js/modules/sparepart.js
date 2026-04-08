@@ -36,7 +36,7 @@ function renderTable(searchQuery = "") {
   table.innerHTML = "";
 
   if (filteredData.length === 0) {
-    table.innerHTML = `<tr><td colspan="3" class="text-center py-4">
+    table.innerHTML = `<tr><td colspan="4" class="text-center py-4">
       <div class="text-muted">
         <p class="mb-1">⚙️</p>
         <p>${searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data sparepart"}</p>
@@ -49,11 +49,13 @@ function renderTable(searchQuery = "") {
   filteredData.forEach(item => {
     // Sanitize user input
     const safeName = sanitizeHTML(item.name);
+    const safeQty = item.qty !== undefined ? item.qty : 0;
     const safePrice = formatCurrency(item.price);
     
     table.innerHTML += `
       <tr>
         <td>${safeName}</td>
+        <td>${safeQty}</td>
         <td>${safePrice}</td>
         <td>
           <button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit">✏️</button>
@@ -80,9 +82,11 @@ function setupEvent() {
 
   btnSave.addEventListener("click", () => {
     const nameInput = document.getElementById("namaPart");
+    const qtyInput = document.getElementById("qtyPart");
     const priceInput = document.getElementById("hargaPart");
     
     const name = nameInput.value.trim();
+    const qty = parseInt(qtyInput.value) || 0;
     const price = parseInt(priceInput.value);
 
     // Validation
@@ -113,6 +117,7 @@ function setupEvent() {
           return;
         }
         data[index].name = name;
+        data[index].qty = qty;
         data[index].price = price;
         saveData(KEY, data);
       }
@@ -122,6 +127,7 @@ function setupEvent() {
       const newPart = {
         id: generateId(),
         name,
+        qty,
         price
       };
       
@@ -177,6 +183,7 @@ function editPart(id) {
 
   // Set values to form
   document.getElementById("namaPart").value = part.name;
+  document.getElementById("qtyPart").value = part.qty || 0;
   document.getElementById("hargaPart").value = part.price;
   
   // Set edit ID
@@ -195,10 +202,12 @@ function editPart(id) {
 // ======================
 function clearForm() {
   document.getElementById("namaPart").value = "";
+  document.getElementById("qtyPart").value = "";
   document.getElementById("hargaPart").value = "";
   
   // Remove validation classes
   document.getElementById("namaPart").classList.remove("is-invalid");
+  document.getElementById("qtyPart").classList.remove("is-invalid");
   document.getElementById("hargaPart").classList.remove("is-invalid");
   
   // Reset modal title
