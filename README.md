@@ -1,6 +1,6 @@
-# Aplikasi Admin Bengkel
+# Admin Bengkel (Beta-4)
 
-## What's New:
+## Changelog:
 
 1. **Input nomor polisi kendaraan** - Ditambahkan di halaman pelanggan:
    - Kolom baru "No. Polisi" di tabel pelanggan
