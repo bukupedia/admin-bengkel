@@ -1,6 +1,4 @@
-# Admin Bengkel (Beta-6)
-
-## Changelog:
+# [Beta-6] Changes Made
 
 1. **servis.html** - Mengubah placeholder input pencarian menjadi lebih informatif:
    ```html
