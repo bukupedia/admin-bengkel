@@ -1,7 +1,7 @@
 // assets/js/modules/dashboard.js
 
 import { getData } from "../storage.js";
-import { formatCurrency } from "../utils.js";
+import { formatCurrency, sanitizeHTML } from "../utils.js";
 
 const SERVIS_KEY = "servis";
 const CUSTOMER_KEY = "customers";
@@ -107,8 +107,8 @@ function renderRecentServis(data) {
   
   container.innerHTML = recentData.map(item => {
     const customer = customers.find(c => c.id == item.customerId);
-    const customerName = customer ? customer.name : "-";
-    const policeNumber = customer ? (customer.policeNumber || "-") : "-";
+    const customerName = customer ? sanitizeHTML(customer.name) : "-";
+    const policeNumber = customer ? sanitizeHTML(customer.policeNumber || "-") : "-";
     
     // Status mapping synced with servis.js
     const statusMap = {
@@ -125,7 +125,7 @@ function renderRecentServis(data) {
             <div>
               <strong>${customerName}</strong>
               <br>
-              <small class="text-muted">${policeNumber} • ${item.tanggal}</small>
+              <small class="text-muted">${policeNumber} • ${sanitizeHTML(item.tanggal)}</small>
             </div>
             <div class="text-end">
               <div class="fw-bold">${formatCurrency(item.total)}</div>
