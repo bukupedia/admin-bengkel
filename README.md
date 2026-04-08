@@ -1,22 +1,38 @@
-# [Beta-8] Changes Made
+# [Beta-9] Changes Made
 
-**sparepart.html:**
-- Menambahkan kolom "Quantity" pada tabel header
-- Menambahkan input field "Quantity" pada form modal tambah/edit sparepart
+Audit UI/UX, Security and Fix Issues
 
-**assets/js/modules/sparepart.js:**
-- Menampilkan quantity pada setiap baris tabel
-- Menyimpan quantity saat menambah sparepart baru
-- Memuat quantity saat edit sparepart
-- Mengosongkan field quantity saat form dibersihkan
+## Security Fixes
 
-Sekarang halaman Sparepart memiliki kolom Quantity yang berfungsi penuh.
+### 1. Authentication Improvements
+- **Removed hardcoded credentials** from login page footer (index.html)
+- **Added rate limiting** with 5 max login attempts and 5-minute lockout (auth.js)
+- **Implemented session fingerprinting** to detect potential session theft (auth.js)
+- **Added sliding session expiration** - session extends on activity (auth.js)
+- **Added security warning comments** about using backend authentication in production
 
-## Update
+### 2. Input Validation & Sanitization
+- **Enhanced input validation** for numeric fields (price, quantity) in sparepart.js and pelanggan.js
+- **Added input sanitization** - trimming, length limits (max 100 chars for names), and stripping of `<>` characters
+- **Applied XSS protection** - sanitizeHTML() used in dashboard.js when rendering customer data
 
-Sparepart dengan quantity '0' tidak akan muncul di dropdown "Pilih Sparepart" pada modal 'Tambah Servis'.
+### 3. Security Headers & Best Practices
+- Added proper `autocomplete` attributes to login form fields
+- Added `role="alert"` and `aria-live="polite"` to error messages for accessibility
 
-Perubahan yang dilakukan di `assets/js/modules/servis.js`:
--Pada fungsi `addItemRow()`, sparepart difilter terlebih dahulu sehingga hanya sparepart dengan quantity > 0 yang ditampilkan di dropdown.
+## UI/UX Fixes
 
-Sekarang pengguna hanya dapat memilih sparepart yang memiliki stok (quantity lebih dari 0).
+### 1. Responsive Layout
+- **Fixed dashboard cards** - Changed from fixed `col-md-2` to responsive `col-6 col-md-4 col-lg-2` grid
+- Added `g-3` gap class for proper spacing
+
+### 2. Accessibility Improvements
+- Added `aria-label` to login form and navbar toggle button
+- Added `aria-hidden="true"` to decorative icons (stat icons)
+- Added proper form labels and descriptions
+- Added `aria-live="polite"` to error messages for screen reader users
+
+### 3. Performance Improvements
+- **Added debounce** (300ms) to search functionality in pelanggan.js, sparepart.js, and servis.js to improve performance
+
+All security vulnerabilities identified have been addressed, and the UI/UX has been improved for better usability and accessibility.
