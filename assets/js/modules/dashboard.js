@@ -20,6 +20,9 @@ function loadDashboardData() {
   const customerData = getData(CUSTOMER_KEY);
   const partData = getData(PART_KEY);
   
+  // Calculate total servis
+  const totalServis = servisData.length;
+  
   // Calculate counts by status
   const servisMenunggu = servisData.filter(s => s.status === "menunggu").length;
   const servisDiproses = servisData.filter(s => s.status === "servicing").length;
@@ -34,15 +37,19 @@ function loadDashboardData() {
   const totalPelanggan = customerData.length;
   
   // Update UI
+  document.getElementById("totalServis").textContent = totalServis;
   document.getElementById("servisMenunggu").textContent = servisMenunggu;
   document.getElementById("servisDiproses").textContent = servisDiproses;
   document.getElementById("servisSelesai").textContent = servisSelesai;
+  document.getElementById("totalPelanggan").textContent = totalPelanggan;
   document.getElementById("totalPendapatan").textContent = formatCurrency(totalPendapatan);
   
   // Add animation for status counts
+  animateValue("totalServis", 0, totalServis, 500);
   animateValue("servisMenunggu", 0, servisMenunggu, 500);
   animateValue("servisDiproses", 0, servisDiproses, 500);
   animateValue("servisSelesai", 0, servisSelesai, 500);
+  animateValue("totalPelanggan", 0, totalPelanggan, 500);
   
   // Render recent servis
   renderRecentServis(servisData);
