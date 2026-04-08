@@ -77,24 +77,24 @@
     <p>Admin Panel</p>
   </div>
   
-  <form id="loginForm">
+  <form id="loginForm" aria-label="Form Login">
     <div class="mb-3">
       <label for="username" class="form-label">Username</label>
-      <input type="text" class="form-control" id="username" placeholder="Masukkan username" required>
+      <input type="text" class="form-control" id="username" placeholder="Masukkan username" required autocomplete="username">
     </div>
     
     <div class="mb-3">
       <label for="password" class="form-label">Password</label>
-      <input type="password" class="form-control" id="password" placeholder="Masukkan password" required>
+      <input type="password" class="form-control" id="password" placeholder="Masukkan password" required autocomplete="current-password">
     </div>
     
-    <div class="error-message" id="errorMessage"></div>
+    <div class="error-message" id="errorMessage" role="alert" aria-live="polite"></div>
     
     <button type="submit" class="btn btn-primary btn-login">Masuk</button>
   </form>
   
   <div class="footer-text">
-    Demo: admin / admin123
+    Sistem manajemen bengkel
   </div>
 </div>
 
