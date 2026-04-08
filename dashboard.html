@@ -27,19 +27,43 @@
   
   <!-- Stats Cards -->
   <div class="row mt-3">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <div class="card card-summary p-3 border-0 shadow-sm">
         <div class="d-flex justify-content-between align-items-center">
           <div>
-            <h6 class="text-muted">Total Servis</h6>
-            <h3 id="totalServis" class="text-primary">0</h3>
+            <h6 class="text-muted">Menunggu</h6>
+            <h3 id="servisMenunggu" class="text-secondary">0</h3>
+          </div>
+          <div class="stat-icon">⏳</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <div class="card card-summary p-3 border-0 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted">Diproses</h6>
+            <h3 id="servisDiproses" class="text-warning">0</h3>
           </div>
           <div class="stat-icon">🔧</div>
         </div>
       </div>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <div class="card card-summary p-3 border-0 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted">Selesai</h6>
+            <h3 id="servisSelesai" class="text-success">0</h3>
+          </div>
+          <div class="stat-icon">✓</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3">
       <div class="card card-summary p-3 border-0 shadow-sm">
         <div class="d-flex justify-content-between align-items-center">
           <div>
@@ -47,18 +71,6 @@
             <h3 id="totalPendapatan" class="text-success">Rp 0</h3>
           </div>
           <div class="stat-icon">💰</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card card-summary p-3 border-0 shadow-sm">
-        <div class="d-flex justify-content-between align-items-center">
-          <div>
-            <h6 class="text-muted">Total Pelanggan</h6>
-            <h3 id="totalPelanggan" class="text-info">0</h3>
-          </div>
-          <div class="stat-icon">👤</div>
         </div>
       </div>
     </div>
