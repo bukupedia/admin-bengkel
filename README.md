@@ -1,6 +1,4 @@
-# Admin Bengkel (Beta-4)
-
-## Changelog:
+# [Beta-4] Changes Made
 
 1. **Input nomor polisi kendaraan** - Ditambahkan di halaman pelanggan:
    - Kolom baru "No. Polisi" di tabel pelanggan
