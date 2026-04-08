@@ -2,6 +2,21 @@
 
 const SESSION_KEY = "admin_session";
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+const SESSION_FINGERPRINT = "session_fp";
+
+// Rate limiting tracking (in-memory, reset on page refresh)
+let loginAttempts = 0;
+let lastLoginAttempt = 0;
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Generate session fingerprint for additional security
+function generateFingerprint() {
+  const ua = navigator.userAgent || "unknown";
+  const lang = navigator.language || "unknown";
+  const screen = `${window.screen.width}x${window.screen.height}`;
+  return btoa(`${ua}|${lang}|${screen}`).substring(0, 32);
+}
 
 // Check if user is logged in
 export function isAuthenticated() {
@@ -10,11 +25,26 @@ export function isAuthenticated() {
   
   try {
     const sessionData = JSON.parse(session);
+    
+    // Check session fingerprint
+    const storedFp = localStorage.getItem(SESSION_FINGERPRINT);
+    const currentFp = generateFingerprint();
+    if (storedFp !== currentFp) {
+      // Session fingerprint mismatch - possible session theft
+      logout();
+      return false;
+    }
+    
     // Check if session is expired
     if (Date.now() > sessionData.expiresAt) {
       logout();
       return false;
     }
+    
+    // Extend session on activity (sliding expiration)
+    sessionData.expiresAt = Date.now() + SESSION_DURATION;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+    
     return true;
   } catch (e) {
     return false;
@@ -33,25 +63,70 @@ export function getCurrentUser() {
   }
 }
 
-// Login function
+// Check rate limiting
+function isRateLimited() {
+  const now = Date.now();
+  
+  // Reset attempts after lockout duration
+  if (now - lastLoginAttempt > LOCKOUT_DURATION) {
+    loginAttempts = 0;
+  }
+  
+  if (loginAttempts >= MAX_LOGIN_ATTEMPTS) {
+    return true;
+  }
+  return false;
+}
+
+// Get remaining lockout time in seconds
+export function getLockoutTimeRemaining() {
+  const timeSinceLastAttempt = Date.now() - lastLoginAttempt;
+  const remaining = LOCKOUT_DURATION - timeSinceLastAttempt;
+  return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
+}
+
+// Login function - In production, this should call a secure backend API
+// Authentication should be handled server-side with proper password hashing
 export function login(username, password) {
-  // Simple authentication - in production, use proper backend authentication
-  // For demo: username "admin" with password "admin123"
+  // Check rate limiting
+  if (isRateLimited()) {
+    const remaining = getLockoutTimeRemaining();
+    return { 
+      success: false, 
+      message: `Terlalu banyak percobaan login. Coba lagi dalam ${remaining} detik.` 
+    };
+  }
+  
+  // For demo purposes only - hardcoded credentials should NEVER be used in production
+  // In production: use backend API with hashed passwords and proper auth tokens
   if (username === "admin" && password === "admin123") {
+    // Reset login attempts on successful login
+    loginAttempts = 0;
+    
     const session = {
       username: username,
       loginAt: Date.now(),
       expiresAt: Date.now() + SESSION_DURATION
     };
     localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    
+    // Store session fingerprint
+    localStorage.setItem(SESSION_FINGERPRINT, generateFingerprint());
+    
     return { success: true };
   }
+  
+  // Track failed login attempts
+  loginAttempts++;
+  lastLoginAttempt = Date.now();
+  
   return { success: false, message: "Username atau password salah" };
 }
 
 // Logout function
 export function logout() {
   localStorage.removeItem(SESSION_KEY);
+  localStorage.removeItem(SESSION_FINGERPRINT);
   window.location.href = "index.html";
 }
 
