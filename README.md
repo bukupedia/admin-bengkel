@@ -1,8 +1,4 @@
-# Admin Bengkel (Beta-3 / Fix UI Issues)
-
-I've fixed several potential UI issues in the Bengkel App:
-
-## Changes Made:
+# [Beta-3] Changes Made
 
 ### 1. Created Missing CSS File
 - Created `/css/style.css` with comprehensive styling including:
