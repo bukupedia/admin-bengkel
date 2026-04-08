@@ -55,7 +55,7 @@ function renderCustomerDropdown(customers = null) {
 // ======================
 function addItemRow() {
   const container = document.getElementById("itemContainer");
-  const parts = getData(PART_KEY);
+  const parts = getData(PART_KEY).filter(p => (p.qty || 0) > 0);
 
   const row = document.createElement("div");
   row.className = "row g-2 mb-2 item-row";
