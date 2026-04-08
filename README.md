@@ -11,3 +11,12 @@
 - Mengosongkan field quantity saat form dibersihkan
 
 Sekarang halaman Sparepart memiliki kolom Quantity yang berfungsi penuh.
+
+## Update
+
+Sparepart dengan quantity '0' tidak akan muncul di dropdown "Pilih Sparepart" pada modal 'Tambah Servis'.
+
+Perubahan yang dilakukan di `assets/js/modules/servis.js`:
+-Pada fungsi `addItemRow()`, sparepart difilter terlebih dahulu sehingga hanya sparepart dengan quantity > 0 yang ditampilkan di dropdown.
+
+Sekarang pengguna hanya dapat memilih sparepart yang memiliki stok (quantity lebih dari 0).
