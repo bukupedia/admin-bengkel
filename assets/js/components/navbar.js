@@ -19,7 +19,7 @@ export function renderNavbar() {
           🔧 BengkelApp
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
 
