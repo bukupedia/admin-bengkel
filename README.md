@@ -1,17 +1,16 @@
-# Admin Bengkel (Beta-5)
+# Admin Bengkel (Beta-6)
 
 ## Changelog:
 
-1. **Kolom No. Polisi di tabel servis** (servis.html)
-   - Menambahkan kolom "No. Polisi" pada tabel data servis
+1. servis.html - Mengubah placeholder input pencarian menjadi lebih informatif:
 
-2. **Tampilan No. Polisi di tabel dan detail** (servis.js)
-   - Menampilkan nomor polisi pelanggan di tabel servis
-   - Menambahkan menampilkan nomor polisi di modal detail servis
+```html
+<input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari berdasarkan nama pelanggan atau nomor polisi...">
+```
 
-3. **Cegah pilih tanggal lalu** (servis.js)
-   - Menambahkan atribut `min` pada input tanggal agar tidak bisa memilih tanggal yang sudah lewat melalui date picker
-   - Menambahkan validasi saat menyimpan servis - jika tanggal yang dipilih sudah lewat, akan muncul pesan error dan data tidak disimpan
+2. servis.js - Memperbarui logika pencarian di fungsi `renderTable()` agar dapat mencari berdasarkan:
 
-Admin sekarang tidak dapat memilih tanggal yang sudah lewat saat menambahkan servis baru.
+- Nama pelanggan
+- Nomor polisi
 
+Logika pencarian menggunakan OR, sehingga data akan ditampilkan jika salah satu kata kunci cocok.
