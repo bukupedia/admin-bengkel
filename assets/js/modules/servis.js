@@ -11,9 +11,11 @@ const PART_KEY = "parts";
 // INIT
 // ======================
 export function initServisPage() {
-  // Set today's date as default
+  // Set today's date as default and minimum date
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById("tanggal").value = today;
+  const tanggalInput = document.getElementById("tanggal");
+  tanggalInput.value = today;
+  tanggalInput.min = today;
   
   renderCustomerDropdown();
   const searchInput = document.getElementById("searchServis");
@@ -153,7 +155,7 @@ function renderTable(searchQuery = "") {
   }
 
   if (filteredData.length === 0) {
-    table.innerHTML = `<tr><td colspan="5" class="text-center py-4">
+    table.innerHTML = `<tr><td colspan="6" class="text-center py-4">
       <div class="text-muted">
         <p class="mb-1">🔧</p>
         <p>${searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data servis"}</p>
@@ -166,6 +168,7 @@ function renderTable(searchQuery = "") {
   filteredData.forEach(item => {
     const customer = customers.find(c => c.id == item.customerId);
     const customerName = customer ? sanitizeHTML(customer.name) : "-";
+    const customerPoliceNumber = customer ? sanitizeHTML(customer.policeNumber || "-") : "-";
     const safeTanggal = sanitizeHTML(item.tanggal);
 
     // Status badges
@@ -180,6 +183,7 @@ function renderTable(searchQuery = "") {
       <tr>
         <td>${formatDate(safeTanggal)}</td>
         <td>${customerName}</td>
+        <td>${customerPoliceNumber}</td>
         <td>${formatCurrency(item.total)}</td>
         <td>
           <span class="badge bg-${statusInfo.class}">${statusInfo.text}</span>
@@ -227,6 +231,15 @@ function setupEvent() {
 
     // Validation
     if (!tanggal) {
+      tanggalInput.classList.add("is-invalid");
+      return;
+    }
+    tanggalInput.classList.remove("is-invalid");
+    
+    // Validate: cannot select past date
+    const today = new Date().toISOString().split('T')[0];
+    if (tanggal < today) {
+      alert("Tidak dapat memilih tanggal yang sudah lewat");
       tanggalInput.classList.add("is-invalid");
       return;
     }
@@ -299,6 +312,7 @@ function showDetail(id) {
   const customer = customers.find(c => c.id == servis.customerId);
   
   document.getElementById("detailCustomer").textContent = customer ? customer.name : "-";
+  document.getElementById("detailPoliceNumber").textContent = customer ? (customer.policeNumber || "-") : "-";
   document.getElementById("detailTanggal").textContent = formatDate(servis.tanggal);
   const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Servicing" : "Menunggu");
   document.getElementById("detailStatus").textContent = statusText;
