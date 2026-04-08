@@ -1,26 +1,17 @@
-# Aplikasi Admin Bengkel
+# Aplikasi Admin Bengkel (Beta-5)
 
 ## What's New:
 
-1. **Input nomor polisi kendaraan** - Ditambahkan di halaman pelanggan:
-   - Kolom baru "No. Polisi" di tabel pelanggan
-   - Input field di form tambah/edit pelanggan
+1. **Kolom No. Polisi di tabel servis** (servis.html)
+   - Menambahkan kolom "No. Polisi" pada tabel data servis
 
-2. **Status antrian servis** - 3 status baru:
-   - "Menunggu" (abu-abu) - antrian masuk
-   - "Servicing" (kuning) - sedang dalam perbaikan
-   - "Selesai" (hijau) - selesai
-   - Tombol baru "▶" untuk memulai servis dari status menunggu ke servis
+2. **Tampilan No. Polisi di tabel dan detail** (servis.js)
+   - Menampilkan nomor polisi pelanggan di tabel servis
+   - Menambahkan menampilkan nomor polisi di modal detail servis
 
-3. **Fitur pencarian halaman pelanggan**:
-   - Input search untuk mencari berdasarkan nama, no HP, atau nomor polisi
+3. **Cegah pilih tanggal lalu** (servis.js)
+   - Menambahkan atribut `min` pada input tanggal agar tidak bisa memilih tanggal yang sudah lewat melalui date picker
+   - Menambahkan validasi saat menyimpan servis - jika tanggal yang dipilih sudah lewat, akan muncul pesan error dan data tidak disimpan
 
-4. **Fitur edit data pelanggan**:
-   - Tombol ✏️ untuk mengedit data pelanggan
-
-5. **Fitur pencarian halaman sparepart**:
-   - Input search untuk mencari sparepart berdasarkan nama
-
-6. **Fitur edit data sparepart**:
-   - Tombol ✏️ untuk mengedit data sparepart
+Admin sekarang tidak dapat memilih tanggal yang sudah lewat saat menambahkan servis baru.
 
