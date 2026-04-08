@@ -74,10 +74,14 @@ function setupEvent() {
   const table = document.getElementById("partTable");
   const searchInput = document.getElementById("searchPart");
 
-  // Search functionality
+  // Search functionality with debounce
+  let searchTimeout;
   searchInput.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase();
-    renderTable(query);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const query = e.target.value.toLowerCase();
+      renderTable(query);
+    }, 300);
   });
 
   btnSave.addEventListener("click", () => {
@@ -89,18 +93,29 @@ function setupEvent() {
     const qty = parseInt(qtyInput.value) || 0;
     const price = parseInt(priceInput.value);
 
-    // Validation
-    if (!name) {
+    // Validation - ensure numeric fields have valid positive numbers
+    if (!name || name.length === 0) {
       nameInput.classList.add("is-invalid");
       return;
     }
     nameInput.classList.remove("is-invalid");
     
-    if (!price || price <= 0) {
+    // Validate price is a positive number
+    if (!price || price <= 0 || isNaN(price)) {
       priceInput.classList.add("is-invalid");
       return;
     }
     priceInput.classList.remove("is-invalid");
+
+    // Validate quantity is a non-negative integer
+    if (qty < 0 || isNaN(qty)) {
+      qtyInput.classList.add("is-invalid");
+      return;
+    }
+    qtyInput.classList.remove("is-invalid");
+
+    // Additional sanitization: trim and limit length
+    const sanitizedName = name.substring(0, 100).replace(/[<>]/g, "");
 
     // Check if editing or adding
     const editId = btnSave.dataset.editId;
@@ -111,12 +126,12 @@ function setupEvent() {
       const index = data.findIndex(p => p.id == editId);
       if (index !== -1) {
         // Check for duplicate name (excluding current)
-        const exists = data.some(p => p.name.toLowerCase() === name.toLowerCase() && p.id != editId);
+        const exists = data.some(p => p.name.toLowerCase() === sanitizedName.toLowerCase() && p.id != editId);
         if (exists) {
           alert("Nama sparepart sudah ada!");
           return;
         }
-        data[index].name = name;
+        data[index].name = sanitizedName;
         data[index].qty = qty;
         data[index].price = price;
         saveData(KEY, data);
@@ -126,13 +141,13 @@ function setupEvent() {
       // Add new
       const newPart = {
         id: generateId(),
-        name,
+        name: sanitizedName,
         qty,
         price
       };
       
       // Check for duplicate name
-      const exists = data.some(p => p.name.toLowerCase() === name.toLowerCase());
+      const exists = data.some(p => p.name.toLowerCase() === sanitizedName.toLowerCase());
       if (exists) {
         alert("Nama sparepart sudah ada!");
         return;
