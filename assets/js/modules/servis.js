@@ -30,9 +30,15 @@ export function initServisPage() {
 // ======================
 function setupSearch() {
   const searchInput = document.getElementById("searchServis");
+  
+  // Search functionality with debounce
+  let searchTimeout;
   searchInput.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase();
-    renderTable(query);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const query = e.target.value.toLowerCase();
+      renderTable(query);
+    }, 300);
   });
 }
 
