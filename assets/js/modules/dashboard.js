@@ -20,8 +20,10 @@ function loadDashboardData() {
   const customerData = getData(CUSTOMER_KEY);
   const partData = getData(PART_KEY);
   
-  // Calculate total servis
-  const totalServis = servisData.length;
+  // Calculate counts by status
+  const servisMenunggu = servisData.filter(s => s.status === "menunggu").length;
+  const servisDiproses = servisData.filter(s => s.status === "servicing").length;
+  const servisSelesai = servisData.filter(s => s.status === "selesai").length;
   
   // Calculate total pendapatan (only from completed ones)
   const totalPendapatan = servisData
@@ -32,13 +34,15 @@ function loadDashboardData() {
   const totalPelanggan = customerData.length;
   
   // Update UI
-  document.getElementById("totalServis").textContent = totalServis;
+  document.getElementById("servisMenunggu").textContent = servisMenunggu;
+  document.getElementById("servisDiproses").textContent = servisDiproses;
+  document.getElementById("servisSelesai").textContent = servisSelesai;
   document.getElementById("totalPendapatan").textContent = formatCurrency(totalPendapatan);
-  document.getElementById("totalPelanggan").textContent = totalPelanggan;
   
-  // Add animation
-  animateValue("totalServis", 0, totalServis, 500);
-  animateValue("totalPelanggan", 0, totalPelanggan, 500);
+  // Add animation for status counts
+  animateValue("servisMenunggu", 0, servisMenunggu, 500);
+  animateValue("servisDiproses", 0, servisDiproses, 500);
+  animateValue("servisSelesai", 0, servisSelesai, 500);
   
   // Render recent servis
   renderRecentServis(servisData);
@@ -97,8 +101,15 @@ function renderRecentServis(data) {
   container.innerHTML = recentData.map(item => {
     const customer = customers.find(c => c.id == item.customerId);
     const customerName = customer ? customer.name : "-";
-    const statusClass = item.status === "selesai" ? "success" : "warning";
-    const statusText = item.status === "selesai" ? "Selesai" : "Proses";
+    const policeNumber = customer ? (customer.policeNumber || "-") : "-";
+    
+    // Status mapping synced with servis.js
+    const statusMap = {
+      "menunggu": { class: "secondary", text: "Menunggu" },
+      "servicing": { class: "warning", text: "Diproses" },
+      "selesai": { class: "success", text: "Selesai" }
+    };
+    const statusInfo = statusMap[item.status] || statusMap.menunggu;
     
     return `
       <div class="card mb-2">
@@ -107,11 +118,11 @@ function renderRecentServis(data) {
             <div>
               <strong>${customerName}</strong>
               <br>
-              <small class="text-muted">${item.tanggal}</small>
+              <small class="text-muted">${policeNumber} • ${item.tanggal}</small>
             </div>
             <div class="text-end">
               <div class="fw-bold">${formatCurrency(item.total)}</div>
-              <span class="badge bg-${statusClass}">${statusText}</span>
+              <span class="badge bg-${statusInfo.class}">${statusInfo.text}</span>
             </div>
           </div>
         </div>
