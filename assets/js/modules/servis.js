@@ -150,7 +150,8 @@ function renderTable(searchQuery = "") {
     filteredData = data.filter(item => {
       const customer = customers.find(c => c.id == item.customerId);
       const customerName = customer ? customer.name.toLowerCase() : "";
-      return customerName.includes(searchQuery);
+      const policeNumber = customer ? (customer.policeNumber || "").toLowerCase() : "";
+      return customerName.includes(searchQuery) || policeNumber.includes(searchQuery);
     });
   }
 
