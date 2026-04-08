@@ -175,7 +175,7 @@ function renderTable(searchQuery = "") {
     // Status badges
     const statusMap = {
       "menunggu": { class: "secondary", text: "Menunggu" },
-      "servicing": { class: "warning", text: "Servicing" },
+      "servicing": { class: "warning", text: "Diproses" },
       "selesai": { class: "success", text: "Selesai" }
     };
     const statusInfo = statusMap[item.status] || statusMap.menunggu;
@@ -315,7 +315,7 @@ function showDetail(id) {
   document.getElementById("detailCustomer").textContent = customer ? customer.name : "-";
   document.getElementById("detailPoliceNumber").textContent = customer ? (customer.policeNumber || "-") : "-";
   document.getElementById("detailTanggal").textContent = formatDate(servis.tanggal);
-  const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Servicing" : "Menunggu");
+  const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Diproses" : "Menunggu");
   document.getElementById("detailStatus").textContent = statusText;
   document.getElementById("detailTotal").textContent = formatCurrency(servis.total);
   
