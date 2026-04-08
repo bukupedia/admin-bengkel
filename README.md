@@ -7,7 +7,7 @@
    - Menampilkan nomor polisi pelanggan di tabel servis
    - Menambahkan menampilkan nomor polisi di modal detail servis
 
-3. **Cegah pilih tanggal lalu** (servis.js)
+3. **Non-aktifkan tanggal sebelumnya** (servis.js)
    - Menambahkan atribut `min` pada input tanggal agar tidak bisa memilih tanggal yang sudah lewat melalui date picker
    - Menambahkan validasi saat menyimpan servis - jika tanggal yang dipilih sudah lewat, akan muncul pesan error dan data tidak disimpan
 
