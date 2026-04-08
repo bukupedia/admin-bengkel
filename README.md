@@ -1,6 +1,6 @@
-# Aplikasi Admin Bengkel (Beta-5)
+# Admin Bengkel (Beta-5)
 
-## What's New:
+## Changelog:
 
 1. **Kolom No. Polisi di tabel servis** (servis.html)
    - Menambahkan kolom "No. Polisi" pada tabel data servis
