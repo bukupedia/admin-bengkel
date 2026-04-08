@@ -1,6 +1,4 @@
-# Admin Bengkel (Beta-2)
-
-## Changelog
+# [Beta-2] Changes Made
 
 **Created new CSS file:**
 - `responsive-table.css` - Contains responsive table styles
