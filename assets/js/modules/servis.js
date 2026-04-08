@@ -16,7 +16,8 @@ export function initServisPage() {
   document.getElementById("tanggal").value = today;
   
   renderCustomerDropdown();
-  renderTable();
+  const searchInput = document.getElementById("searchServis");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "");
   setupEvent();
   addItemRow(); // default 1 row
   setupSearch();
@@ -167,8 +168,13 @@ function renderTable(searchQuery = "") {
     const customerName = customer ? sanitizeHTML(customer.name) : "-";
     const safeTanggal = sanitizeHTML(item.tanggal);
 
-    const statusClass = item.status === "selesai" ? "success" : "warning";
-    const statusText = item.status === "selesai" ? "Selesai" : "Proses";
+    // Status badges
+    const statusMap = {
+      "menunggu": { class: "secondary", text: "Menunggu" },
+      "servicing": { class: "warning", text: "Servicing" },
+      "selesai": { class: "success", text: "Selesai" }
+    };
+    const statusInfo = statusMap[item.status] || statusMap.menunggu;
     
     table.innerHTML += `
       <tr>
@@ -176,11 +182,12 @@ function renderTable(searchQuery = "") {
         <td>${customerName}</td>
         <td>${formatCurrency(item.total)}</td>
         <td>
-          <span class="badge bg-${statusClass}">${statusText}</span>
+          <span class="badge bg-${statusInfo.class}">${statusInfo.text}</span>
         </td>
         <td>
           <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
-          ${item.status !== "selesai" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
+          ${item.status === "menunggu" ? `<button class="btn btn-primary btn-sm btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
+          ${item.status === "servicing" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
           <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
         </td>
       </tr>
@@ -244,7 +251,7 @@ function setupEvent() {
       customerId,
       items,
       total,
-      status: "proses"
+      status: "menunggu"
     };
 
     const data = getData(KEY);
@@ -266,7 +273,11 @@ function setupEvent() {
     }
 
     if (e.target.classList.contains("btn-selesai")) {
-      updateStatus(id);
+      updateStatus(id, "selesai");
+    }
+    
+    if (e.target.classList.contains("btn-start")) {
+      updateStatus(id, "servicing");
     }
     
     if (e.target.classList.contains("btn-view")) {
@@ -289,7 +300,8 @@ function showDetail(id) {
   
   document.getElementById("detailCustomer").textContent = customer ? customer.name : "-";
   document.getElementById("detailTanggal").textContent = formatDate(servis.tanggal);
-  document.getElementById("detailStatus").textContent = servis.status === "selesai" ? "Selesai" : "Proses";
+  const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Servicing" : "Menunggu");
+  document.getElementById("detailStatus").textContent = statusText;
   document.getElementById("detailTotal").textContent = formatCurrency(servis.total);
   
   const itemsList = document.getElementById("detailItems");
@@ -314,22 +326,24 @@ function deleteServis(id) {
   data = data.filter(item => item.id != id);
 
   saveData(KEY, data);
-  renderTable();
+  const searchInput = document.getElementById("searchServis");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "");
 }
 
 // ======================
 // UPDATE STATUS
 // ======================
-function updateStatus(id) {
+function updateStatus(id, newStatus) {
   let data = getData(KEY);
 
   data = data.map(item => {
-    if (item.id == id) item.status = "selesai";
+    if (item.id == id) item.status = newStatus;
     return item;
   });
 
   saveData(KEY, data);
-  renderTable();
+  const searchInput = document.getElementById("searchServis");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "");
 }
 
 // ======================
