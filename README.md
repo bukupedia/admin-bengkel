@@ -1,6 +1,4 @@
-# Admin Bengkel (Beta-1)
-
-## Changes Made:
+# [Beta-1] Changes Made:
 
 ## Security Improvements ✅
 1. **Authentication System** - Created proper login/logout with session management
