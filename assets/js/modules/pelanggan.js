@@ -67,10 +67,14 @@ function setupEvent() {
   const table = document.getElementById("pelangganTable");
   const searchInput = document.getElementById("searchPelanggan");
 
-  // Search functionality
+  // Search functionality with debounce
+  let searchTimeout;
   searchInput.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase();
-    renderTable(query);
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      const query = e.target.value.toLowerCase();
+      renderTable(query);
+    }, 300);
   });
 
   btnSave.addEventListener("click", () => {
@@ -82,8 +86,8 @@ function setupEvent() {
     const phone = phoneInput.value.trim();
     const policeNumber = policeInput.value.trim();
 
-    // Validation
-    if (!name) {
+    // Validation - ensure required fields are filled
+    if (!name || name.length === 0) {
       nameInput.classList.add("is-invalid");
       return;
     }
@@ -97,6 +101,11 @@ function setupEvent() {
     }
     phoneInput.classList.remove("is-invalid");
 
+    // Additional sanitization: trim and limit length
+    const sanitizedName = name.substring(0, 100).replace(/[<>]/g, "");
+    const sanitizedPhone = phone ? phone.substring(0, 20) : "";
+    const sanitizedPolice = policeNumber ? policeNumber.substring(0, 15) : "";
+
     // Check if editing or adding
     const editId = btnSave.dataset.editId;
     const data = getData(KEY);
@@ -106,14 +115,14 @@ function setupEvent() {
       const index = data.findIndex(c => c.id == editId);
       if (index !== -1) {
         // Check for duplicate name (excluding current)
-        const exists = data.some(c => c.name.toLowerCase() === name.toLowerCase() && c.id != editId);
+        const exists = data.some(c => c.name.toLowerCase() === sanitizedName.toLowerCase() && c.id != editId);
         if (exists) {
           alert("Nama pelanggan sudah ada!");
           return;
         }
-        data[index].name = name;
-        data[index].phone = phone;
-        data[index].policeNumber = policeNumber;
+        data[index].name = sanitizedName;
+        data[index].phone = sanitizedPhone;
+        data[index].policeNumber = sanitizedPolice;
         saveData(KEY, data);
       }
       delete btnSave.dataset.editId;
@@ -121,13 +130,13 @@ function setupEvent() {
       // Add new
       const newCustomer = {
         id: generateId(),
-        name,
-        phone,
-        policeNumber
+        name: sanitizedName,
+        phone: sanitizedPhone,
+        policeNumber: sanitizedPolice
       };
       
       // Check for duplicate name
-      const exists = data.some(c => c.name.toLowerCase() === name.toLowerCase());
+      const exists = data.some(c => c.name.toLowerCase() === sanitizedName.toLowerCase());
       if (exists) {
         alert("Nama pelanggan sudah ada!");
         return;
