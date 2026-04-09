@@ -44,53 +44,76 @@ function setupSearch() {
 }
 
 // ======================
-// CUSTOMER SEARCH FUNCTIONALITY
+// CUSTOMER SEARCH FUNCTIONALITY (combobox style GitHub)
 // ======================
 function setupCustomerSearch() {
   const searchInput = document.getElementById("customerSearch");
-  const customerSelect = document.getElementById("customerSelect");
   
-  searchInput.addEventListener("input", (e) => {
-    const query = e.target.value.toLowerCase();
-    renderCustomerDropdownWithFilter(query);
+  searchInput.addEventListener("input", () => {
+    // Trigger filter for datalist - input is already bound via list attribute
+    // But we can also auto-select if exact match
   });
-}
-
-function renderCustomerDropdownWithFilter(filterQuery = "") {
-  const customers = getData(CUSTOMER_KEY);
-  const select = document.getElementById("customerSelect");
-  const currentValue = select.value;
   
-  let filteredCustomers = customers;
-  if (filterQuery) {
-    filteredCustomers = customers.filter(c => {
-      const name = c.name.toLowerCase();
-      const policeNumber = (c.policeNumber || "").toLowerCase();
-      return name.includes(filterQuery) || policeNumber.includes(filterQuery);
-    });
-  }
-  
-  select.innerHTML = `<option value="">-- Pilih Pelanggan --</option>`;
-  filteredCustomers.forEach(c => {
-    const safeName = sanitizeHTML(c.name);
-    const policeNum = c.policeNumber ? ` (${sanitizeHTML(c.policeNumber)})` : "";
-    const selected = c.id === currentValue ? "selected" : "";
-    select.innerHTML += `<option value="${c.id}" ${selected}>${safeName}${policeNum}</option>`;
+  // Handle selection from datalist
+  searchInput.addEventListener("change", () => {
+    // Input value can be matched to customer name
   });
 }
 
 // ======================
-// DROPDOWN CUSTOMER
+// RENDER CUSTOMER DATALIST
 // ======================
 function renderCustomerDropdown(customers = null) {
   const custData = customers || getData(CUSTOMER_KEY);
-  const select = document.getElementById("customerSelect");
+  const dataList = document.getElementById("customerList");
 
-  select.innerHTML = `<option value="">-- Pilih Pelanggan --</option>`;
+  dataList.innerHTML = "";
   custData.forEach(c => {
     const safeName = sanitizeHTML(c.name);
     const policeNum = c.policeNumber ? ` (${sanitizeHTML(c.policeNumber)})` : "";
-    select.innerHTML += `<option value="${c.id}">${safeName}${policeNum}</option>`;
+    dataList.innerHTML += `<option value="${safeName}${policeNum}" data-id="${c.id}" data-police="${c.policeNumber || ""}">`;
+  });
+}
+
+// ======================
+// FIND CUSTOMER ID BY INPUT VALUE
+// ======================
+function findCustomerIdByInput(inputValue) {
+  if (!inputValue) return null;
+  
+  const dataList = document.getElementById("customerList");
+  const options = dataList.querySelectorAll("option");
+  
+  for (const option of options) {
+    if (option.value === inputValue) {
+      return option.dataset.id;
+    }
+  }
+  
+  // Also try to match by partial input (if user typed but didn't select from dropdown)
+  const lowerInput = inputValue.toLowerCase();
+  for (const option of options) {
+    if (option.value.toLowerCase().includes(lowerInput)) {
+      return option.dataset.id;
+    }
+  }
+  
+  return null;
+}
+
+// ======================
+// PART DATALIST (combobox style GitHub)
+// ======================
+function renderPartDatalist() {
+  const allParts = getData(PART_KEY);
+  const dataList = document.getElementById("partDatalist");
+  if (!dataList) return;
+  
+  dataList.innerHTML = "";
+  allParts.forEach(p => {
+    const safeName = sanitizeHTML(p.name);
+    const stockInfo = p.qty > 0 ? ` (Stok: ${p.qty})` : ` (Stok: 0)`;
+    dataList.innerHTML += `<option value="${safeName}${stockInfo}" data-id="${p.id}" data-price="${p.price}" data-qty="${p.qty || 0}">`;
   });
 }
 
@@ -115,12 +138,8 @@ function addItemRow() {
 
   row.innerHTML = `
     <div class="col-md-4">
-      <div class="part-dropdown">
-        <input type="text" class="form-control part-search" placeholder="Cari sparepart...">
-        <select class="form-control part-select mt-2">
-          ${options}
-        </select>
-      </div>
+      <input type="text" class="form-control part-search" placeholder="Cari sparepart..." list="partDatalist" autocomplete="off">
+      <datalist id="partDatalist"></datalist>
     </div>
 
     <div class="col-md-2">
@@ -143,7 +162,7 @@ function addItemRow() {
   container.appendChild(row);
 
   const searchInput = row.querySelector(".part-search");
-  const select = row.querySelector(".part-select");
+  // Using datalist - no select needed
   const nameInput = row.querySelector(".item-name");
   const qtyInput = row.querySelector(".item-qty");
   const priceInput = row.querySelector(".item-price");
@@ -312,20 +331,22 @@ function setupEvent() {
   // save
   btnSave.addEventListener("click", () => {
     const tanggalInput = document.getElementById("tanggal");
-    const customerSelect = document.getElementById("customerSelect");
+    const customerSearch = document.getElementById("customerSearch");
+    const customerDatalist = document.getElementById("customerList");
     
     const tanggal = tanggalInput.value;
-    const customerId = customerSelect.value;
+    // Find customer by matching input value to datalist option
+    const customerId = findCustomerIdByInput(customerSearch.value);
 
     const items = [];
     const partsToUpdate = {}; // partId -> qty to deduct
 
     document.querySelectorAll(".item-row").forEach(row => {
-      const select = row.querySelector(".part-select");
+      // Using datalist - no select needed
       const name = row.querySelector(".item-name").value.trim();
       const price = parseInt(row.querySelector(".item-price").value);
       const qty = parseInt(row.querySelector(".item-qty").value) || 1;
-      const partId = select.value;
+      const partId = row.querySelector(".part-search").dataset.partId || null;
 
       if (name && price) {
         items.push({ name, price, qty, partId });
@@ -357,10 +378,10 @@ function setupEvent() {
     tanggalInput.classList.remove("is-invalid");
     
     if (!customerId) {
-      customerSelect.classList.add("is-invalid");
+      customerSearch.classList.add("is-invalid");
       return;
     }
-    customerSelect.classList.remove("is-invalid");
+    customerSearch.classList.remove("is-invalid");
     
     if (items.length === 0) {
       alert("Tambahkan minimal satu item servis");
@@ -372,7 +393,7 @@ function setupEvent() {
     // Show preview confirmation
     const previewText = `Konfirmasi Simpan Servis:\n\n` +
       `• Tanggal: ${formatDate(tanggal)}\n` +
-      `• Pelanggan: ${customerSelect.options[customerSelect.selectedIndex].text}\n` +
+      `• Pelanggan: ${customerSearch.value}\n` +
       `• Jumlah Item: ${itemCount}\n` +
       `• Total Quantity: ${qtyCount}\n` +
       `• Total Biaya: ${formatCurrency(total)}\n\n` +
@@ -505,7 +526,6 @@ function updateStatus(id, newStatus) {
 function resetForm() {
   document.getElementById("tanggal").value = "";
   document.getElementById("customerSearch").value = "";
-  document.getElementById("customerSelect").value = "";
   document.getElementById("itemContainer").innerHTML = "";
   document.getElementById("totalDisplay").innerText = formatCurrency(0);
   document.getElementById("itemCountDisplay").innerText = "0";
@@ -513,7 +533,7 @@ function resetForm() {
   
   // Remove validation classes
   document.getElementById("tanggal").classList.remove("is-invalid");
-  document.getElementById("customerSelect").classList.remove("is-invalid");
+  document.getElementById("customerSearch").classList.remove("is-invalid");
 
   // Refresh customer dropdown
   renderCustomerDropdown();
