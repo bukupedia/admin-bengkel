@@ -49,9 +49,15 @@
 
       <div class="modal-body">
 
+  <!-- Tanggal -->
   <input id="tanggal" type="date" class="form-control mb-2">
 
-  <select id="customerSelect" class="form-control mb-3"></select>
+  <!-- Pelanggan dengan Pencarian -->
+  <div class="mb-3">
+    <label class="form-label">Pelanggan</label>
+    <input type="text" id="customerSearch" class="form-control mb-2" placeholder="Cari nama atau nomor polisi...">
+    <select id="customerSelect" class="form-control"></select>
+  </div>
 
   <!-- ITEM LIST -->
   <div id="itemContainer"></div>
@@ -61,7 +67,10 @@
   </button>
 
   <!-- TOTAL -->
-  <h5>Total: <span id="totalDisplay">Rp 0</span></h5>
+  <div class="alert alert-info">
+    <h5>Total: <span id="totalDisplay">Rp 0</span></h5>
+    <small class="text-muted">Item: <span id="itemCountDisplay">0</span> | Jumlah Quantity: <span id="qtyCountDisplay">0</span></small>
+  </div>
 
 </div>
       <div class="modal-footer">
