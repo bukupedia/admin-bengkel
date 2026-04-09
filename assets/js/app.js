@@ -4,7 +4,7 @@ import { requireAuth } from "./modules/auth.js";
 import { renderNavbar } from "./components/navbar.js";
 import { initPelangganPage } from "./modules/pelanggan.js";
 import { initServisPage } from "./modules/servis.js";
-import { initSparepartPage } from "./modules/sparepart.js";
+import { initProdukPage } from "./modules/produk.js";
 import { initDashboardPage } from "./modules/dashboard.js";
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -28,6 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initServisPage();
   }
   if (page === "sparepart") {
-    initSparepartPage();
+    initProdukPage();
   }
 });
