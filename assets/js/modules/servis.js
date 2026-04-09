@@ -31,16 +31,33 @@ export function initServisPage() {
 // ======================
 function setupSearch() {
   const searchInput = document.getElementById("searchServis");
+  const clearSearch = document.getElementById("clearSearchServis");
   
   // Search functionality with debounce
   let searchTimeout;
   searchInput.addEventListener("input", (e) => {
+    const value = e.target.value;
+    // Show/hide clear button
+    if (clearSearch) {
+      clearSearch.style.display = value ? "block" : "none";
+    }
+    
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      const query = e.target.value.toLowerCase();
+      const query = value.toLowerCase();
       renderTable(query);
     }, 300);
   });
+
+  // Clear search button
+  if (clearSearch) {
+    clearSearch.addEventListener("click", () => {
+      searchInput.value = "";
+      clearSearch.style.display = "none";
+      renderTable("");
+      searchInput.focus();
+    });
+  }
 }
 
 // ======================
@@ -127,19 +144,21 @@ function addItemRow() {
   const row = document.createElement("div");
   row.className = "row g-2 mb-2 item-row";
 
-  // Build options with stock info
-  let options = `<option value="">-- Pilih Sparepart --</option>`;
+  // Build options for the hidden select
+  let selectOptions = `<option value="">-- Pilih Sparepart --</option>`;
   allParts.forEach(p => {
     const safeName = sanitizeHTML(p.name);
     const stockInfo = p.qty > 0 ? `✓ (Stok: ${p.qty})` : `✗ (Stok: 0)`;
     const disabled = p.qty <= 0 ? "disabled" : "";
-    options += `<option value="${p.id}" data-price="${p.price}" data-qty="${p.qty || 0}" ${disabled}>${safeName} - ${stockInfo}</option>`;
+    selectOptions += `<option value="${p.id}" data-price="${p.price}" data-qty="${p.qty || 0}" ${disabled}>${safeName} - ${stockInfo}</option>`;
   });
 
   row.innerHTML = `
     <div class="col-md-4">
-      <input type="text" class="form-control part-search" placeholder="Cari sparepart..." list="partDatalist" autocomplete="off">
-      <datalist id="partDatalist"></datalist>
+      <input type="text" class="form-control part-search" placeholder="Cari sparepart..." list="partDatalistRow-${container.children.length}" autocomplete="off">
+      <select class="part-select d-none">
+        ${selectOptions}
+      </select>
     </div>
 
     <div class="col-md-2">
@@ -162,12 +181,12 @@ function addItemRow() {
   container.appendChild(row);
 
   const searchInput = row.querySelector(".part-search");
-  // Using datalist - no select needed
+  const select = row.querySelector(".part-select");
   const nameInput = row.querySelector(".item-name");
   const qtyInput = row.querySelector(".item-qty");
   const priceInput = row.querySelector(".item-price");
 
-  // Search/filter sparepart
+  // Search/filter sparepart - filter the select options based on query
   searchInput.addEventListener("input", () => {
     const query = searchInput.value.toLowerCase();
     const currentValue = select.value;
@@ -189,18 +208,20 @@ function addItemRow() {
     select.innerHTML = options;
   });
 
-  // pilih sparepart → auto isi
+  // Select sparepart from dropdown → auto fill
   select.addEventListener("change", () => {
-    const selected = select.options[select.selectedIndex];
-    const price = selected.dataset.price;
-    const qty = parseInt(selected.dataset.qty) || 0;
-    const name = selected.text.split(" - ")[0];
+    const selectedOption = select.options[select.selectedIndex];
+    const price = selectedOption.dataset.price;
+    const qty = parseInt(selectedOption.dataset.qty) || 0;
+    const name = selectedOption.text.split(" - ")[0];
 
     if (price) {
       priceInput.value = price;
       nameInput.value = name;
       qtyInput.max = qty;
       qtyInput.value = 1;
+      // Also update search input to show selected
+      searchInput.value = name;
     }
 
     calculateTotal();
@@ -342,11 +363,11 @@ function setupEvent() {
     const partsToUpdate = {}; // partId -> qty to deduct
 
     document.querySelectorAll(".item-row").forEach(row => {
-      // Using datalist - no select needed
+      const select = row.querySelector(".part-select");
       const name = row.querySelector(".item-name").value.trim();
       const price = parseInt(row.querySelector(".item-price").value);
       const qty = parseInt(row.querySelector(".item-qty").value) || 1;
-      const partId = row.querySelector(".part-search").dataset.partId || null;
+      const partId = select.value || null;
 
       if (name && price) {
         items.push({ name, price, qty, partId });
