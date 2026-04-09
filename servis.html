@@ -52,17 +52,16 @@
   <!-- Tanggal -->
   <input id="tanggal" type="date" class="form-control mb-2">
 
-  <!-- Pelanggan dengan Pencarian -->
+  <!-- Pelanggan dengan Pencarian (combobox style GitHub) -->
   <div class="mb-3">
     <label class="form-label">Pelanggan</label>
-    <div class="customer-dropdown">
-      <input type="text" id="customerSearch" class="form-control" placeholder="Cari nama atau nomor polisi...">
-      <select id="customerSelect" class="form-control mt-2"></select>
-    </div>
+    <input type="text" id="customerSearch" class="form-control" placeholder="Cari nama atau nomor polisi..." list="customerList" autocomplete="off">
+    <datalist id="customerList"></datalist>
   </div>
 
   <!-- ITEM LIST -->
   <div id="itemContainer"></div>
+  <datalist id="partDatalist"></datalist>
 
   <button class="btn btn-sm btn-secondary mb-3" id="addItem">
     + Tambah Item
