@@ -114,13 +114,13 @@ function addItemRow() {
   });
 
   row.innerHTML = `
-    <div class="col-md-3">
-      <input type="text" class="form-control part-search" placeholder="Cari sparepart...">
-    </div>
-    <div class="col-md-3">
-      <select class="form-control part-select">
-        ${options}
-      </select>
+    <div class="col-md-4">
+      <div class="part-dropdown">
+        <input type="text" class="form-control part-search" placeholder="Cari sparepart...">
+        <select class="form-control part-select mt-2">
+          ${options}
+        </select>
+      </div>
     </div>
 
     <div class="col-md-2">
@@ -376,7 +376,7 @@ function setupEvent() {
       `• Jumlah Item: ${itemCount}\n` +
       `• Total Quantity: ${qtyCount}\n` +
       `• Total Biaya: ${formatCurrency(total)}\n\n` +
-      `Stok sparepart akan dikurangi sesuai quantity yang digunakan.\n\nLanjutkan?`;
+      `Lanjutkan?`;
 
     if (!confirm(previewText)) {
       return;
