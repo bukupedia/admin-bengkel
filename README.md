@@ -1,14 +1,35 @@
 # [Beta-10] Changes Made
 
-Rename Sparepart menjadi Produk dan Quantity menjadi Stok
+## Ringkasan Perubahan
 
-**Sparepart → Produk:**
-1. `sparepart.html` - Title, heading, placeholder, dan table header
-2. `navbar.js` - Link navigasi
-3. `servis.js` - Opsi dropdown
-4. `sparepart.js` - Pesan-pesan user-facing
+### 1. Penggantian Label
+- **Sparepart** → **Produk**
+- **Quantity** → **Stok**
 
-**Quantity → Stok:**
-1. `sparepart.html` - Table header dan placeholder input
+### 2. File yang Diubah/Rename
 
-Semua label sudah diganti sesuai permintaan dan File `sparepart.html` telah rename menjadi `produk.html`, dan link di `navbar.js` juga sudah diperbarui.
+| File Baru | File Lama |
+|----------|-----------|
+| produk.html | sparepart.html |
+| assets/js/modules/produk.js | assets/js/modules/sparepart.js |
+
+### 3. Detail Perubahan
+
+**produk.html:**
+- Title: Sparepart → Produk
+- data-page: sparepart → produk
+- Heading & placeholder search
+- Table header: Quantity → Stok
+- Modal title & input placeholder
+
+**navbar.js:**
+- Link & label navigasi
+
+**servis.js:**
+- Opsi dropdown
+
+**produk.js:**
+- Semua pesan user-facing
+
+**app.js:**
+- Import function name & module path
