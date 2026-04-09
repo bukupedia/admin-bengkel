@@ -1,6 +1,7 @@
 // assets/js/components/navbar.js
 
 import { getCurrentUser, logout } from "../modules/auth.js";
+import { sanitizeHTML } from "../utils.js";
 
 export function renderNavbar() {
   const navbar = document.getElementById("navbar");
@@ -8,6 +9,9 @@ export function renderNavbar() {
   
   // Get current user for display
   const user = getCurrentUser();
+  
+  // Sanitize username to prevent XSS
+  const safeUsername = user ? sanitizeHTML(user.username) : 'Admin';
 
   if (!navbar) return;
 
@@ -43,8 +47,8 @@ export function renderNavbar() {
             </li>
 
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                👤 ${user ? user.username : 'Admin'}
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                👤 ${safeUsername}
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li><span class="dropdown-item-text text-muted small">Logged in</span></li>
