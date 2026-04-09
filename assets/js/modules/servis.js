@@ -23,6 +23,7 @@ export function initServisPage() {
   setupEvent();
   addItemRow(); // default 1 row
   setupSearch();
+  setupCustomerSearch();
 }
 
 // ======================
@@ -43,6 +44,42 @@ function setupSearch() {
 }
 
 // ======================
+// CUSTOMER SEARCH FUNCTIONALITY
+// ======================
+function setupCustomerSearch() {
+  const searchInput = document.getElementById("customerSearch");
+  const customerSelect = document.getElementById("customerSelect");
+  
+  searchInput.addEventListener("input", (e) => {
+    const query = e.target.value.toLowerCase();
+    renderCustomerDropdownWithFilter(query);
+  });
+}
+
+function renderCustomerDropdownWithFilter(filterQuery = "") {
+  const customers = getData(CUSTOMER_KEY);
+  const select = document.getElementById("customerSelect");
+  const currentValue = select.value;
+  
+  let filteredCustomers = customers;
+  if (filterQuery) {
+    filteredCustomers = customers.filter(c => {
+      const name = c.name.toLowerCase();
+      const policeNumber = (c.policeNumber || "").toLowerCase();
+      return name.includes(filterQuery) || policeNumber.includes(filterQuery);
+    });
+  }
+  
+  select.innerHTML = `<option value="">-- Pilih Pelanggan --</option>`;
+  filteredCustomers.forEach(c => {
+    const safeName = sanitizeHTML(c.name);
+    const policeNum = c.policeNumber ? ` (${sanitizeHTML(c.policeNumber)})` : "";
+    const selected = c.id === currentValue ? "selected" : "";
+    select.innerHTML += `<option value="${c.id}" ${selected}>${safeName}${policeNum}</option>`;
+  });
+}
+
+// ======================
 // DROPDOWN CUSTOMER
 // ======================
 function renderCustomerDropdown(customers = null) {
@@ -52,7 +89,8 @@ function renderCustomerDropdown(customers = null) {
   select.innerHTML = `<option value="">-- Pilih Pelanggan --</option>`;
   custData.forEach(c => {
     const safeName = sanitizeHTML(c.name);
-    select.innerHTML += `<option value="${c.id}">${safeName}</option>`;
+    const policeNum = c.policeNumber ? ` (${sanitizeHTML(c.policeNumber)})` : "";
+    select.innerHTML += `<option value="${c.id}">${safeName}${policeNum}</option>`;
   });
 }
 
@@ -61,59 +99,98 @@ function renderCustomerDropdown(customers = null) {
 // ======================
 function addItemRow() {
   const container = document.getElementById("itemContainer");
-  const parts = getData(PART_KEY).filter(p => (p.qty || 0) > 0);
+  const allParts = getData(PART_KEY);
 
   const row = document.createElement("div");
   row.className = "row g-2 mb-2 item-row";
 
-  // dropdown options
+  // Build options with stock info
   let options = `<option value="">-- Pilih Sparepart --</option>`;
-  parts.forEach(p => {
+  allParts.forEach(p => {
     const safeName = sanitizeHTML(p.name);
-    options += `<option value="${p.id}" data-price="${p.price}">${safeName}</option>`;
+    const stockInfo = p.qty > 0 ? `✓ (Stok: ${p.qty})` : `✗ (Stok: 0)`;
+    const disabled = p.qty <= 0 ? "disabled" : "";
+    options += `<option value="${p.id}" data-price="${p.price}" data-qty="${p.qty || 0}" ${disabled}>${safeName} - ${stockInfo}</option>`;
   });
 
   row.innerHTML = `
-    <div class="col-md-4">
+    <div class="col-md-3">
+      <input type="text" class="form-control part-search" placeholder="Cari sparepart...">
+    </div>
+    <div class="col-md-3">
       <select class="form-control part-select">
         ${options}
       </select>
     </div>
 
-    <div class="col-md-3">
-      <input type="text" class="form-control item-name" placeholder="Atau nama manual">
+    <div class="col-md-2">
+      <input type="text" class="form-control item-name" placeholder="Nama item">
     </div>
 
-    <div class="col-md-3">
-      <input type="number" class="form-control item-price" placeholder="Harga" min="0">
+    <div class="col-md-1">
+      <input type="number" class="form-control item-qty" placeholder="Qty" min="1" value="1">
     </div>
 
     <div class="col-md-2">
+      <input type="number" class="form-control item-price" placeholder="Harga" min="0">
+    </div>
+
+    <div class="col-md-1">
       <button class="btn btn-danger w-100 btn-remove">✕</button>
     </div>
   `;
 
   container.appendChild(row);
 
+  const searchInput = row.querySelector(".part-search");
   const select = row.querySelector(".part-select");
   const nameInput = row.querySelector(".item-name");
+  const qtyInput = row.querySelector(".item-qty");
   const priceInput = row.querySelector(".item-price");
+
+  // Search/filter sparepart
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase();
+    const currentValue = select.value;
+    
+    let filteredParts = allParts;
+    if (query) {
+      filteredParts = allParts.filter(p => p.name.toLowerCase().includes(query));
+    }
+    
+    let options = `<option value="">-- Pilih Sparepart --</option>`;
+    filteredParts.forEach(p => {
+      const safeName = sanitizeHTML(p.name);
+      const stockInfo = p.qty > 0 ? `✓ (Stok: ${p.qty})` : `✗ (Stok: 0)`;
+      const disabled = p.qty <= 0 ? "disabled" : "";
+      const selected = p.id === currentValue ? "selected" : "";
+      options += `<option value="${p.id}" data-price="${p.price}" data-qty="${p.qty || 0}" ${disabled} ${selected}>${safeName} - ${stockInfo}</option>`;
+    });
+    
+    select.innerHTML = options;
+  });
 
   // pilih sparepart → auto isi
   select.addEventListener("change", () => {
     const selected = select.options[select.selectedIndex];
     const price = selected.dataset.price;
-    const name = selected.text;
+    const qty = parseInt(selected.dataset.qty) || 0;
+    const name = selected.text.split(" - ")[0];
 
     if (price) {
       priceInput.value = price;
       nameInput.value = name;
+      qtyInput.max = qty;
+      qtyInput.value = 1;
     }
 
     calculateTotal();
   });
 
-  // manual input → tetap dihitung
+  // quantity change → recalculate
+  qtyInput.addEventListener("input", calculateTotal);
+  
+  // manual price change → recalculate
   priceInput.addEventListener("input", calculateTotal);
 
   // remove row
@@ -127,17 +204,32 @@ function addItemRow() {
 // HITUNG TOTAL
 // ======================
 function calculateTotal() {
-  const prices = document.querySelectorAll(".item-price");
+  const rows = document.querySelectorAll(".item-row");
   let total = 0;
+  let itemCount = 0;
+  let qtyCount = 0;
 
-  prices.forEach(input => {
-    total += parseInt(input.value) || 0;
+  rows.forEach(row => {
+    const priceInput = row.querySelector(".item-price");
+    const qtyInput = row.querySelector(".item-qty");
+    const nameInput = row.querySelector(".item-name");
+    
+    const price = parseInt(priceInput?.value) || 0;
+    const qty = parseInt(qtyInput?.value) || 0;
+    const name = nameInput?.value.trim() || "";
+
+    if (name && price > 0) {
+      total += price * qty;
+      itemCount++;
+      qtyCount += qty;
+    }
   });
 
-  document.getElementById("totalDisplay").innerText =
-    formatCurrency(total);
+  document.getElementById("totalDisplay").innerText = formatCurrency(total);
+  document.getElementById("itemCountDisplay").innerText = itemCount;
+  document.getElementById("qtyCountDisplay").innerText = qtyCount;
 
-  return total;
+  return { total, itemCount, qtyCount };
 }
 
 // ======================
@@ -226,13 +318,25 @@ function setupEvent() {
     const customerId = customerSelect.value;
 
     const items = [];
+    const partsToUpdate = {}; // partId -> qty to deduct
 
     document.querySelectorAll(".item-row").forEach(row => {
+      const select = row.querySelector(".part-select");
       const name = row.querySelector(".item-name").value.trim();
       const price = parseInt(row.querySelector(".item-price").value);
+      const qty = parseInt(row.querySelector(".item-qty").value) || 1;
+      const partId = select.value;
 
       if (name && price) {
-        items.push({ name, price });
+        items.push({ name, price, qty, partId });
+        
+        // Track parts to update stock
+        if (partId) {
+          if (!partsToUpdate[partId]) {
+            partsToUpdate[partId] = 0;
+          }
+          partsToUpdate[partId] += qty;
+        }
       }
     });
 
@@ -263,7 +367,31 @@ function setupEvent() {
       return;
     }
 
-    const total = calculateTotal();
+    const { total, itemCount, qtyCount } = calculateTotal();
+
+    // Show preview confirmation
+    const previewText = `Konfirmasi Simpan Servis:\n\n` +
+      `• Tanggal: ${formatDate(tanggal)}\n` +
+      `• Pelanggan: ${customerSelect.options[customerSelect.selectedIndex].text}\n` +
+      `• Jumlah Item: ${itemCount}\n` +
+      `• Total Quantity: ${qtyCount}\n` +
+      `• Total Biaya: ${formatCurrency(total)}\n\n` +
+      `Stok sparepart akan dikurangi sesuai quantity yang digunakan.\n\nLanjutkan?`;
+
+    if (!confirm(previewText)) {
+      return;
+    }
+
+    // Deduct stock from spareparts
+    const allParts = getData(PART_KEY);
+    for (const [partId, usedQty] of Object.entries(partsToUpdate)) {
+      const partIndex = allParts.findIndex(p => p.id === partId);
+      if (partIndex !== -1) {
+        allParts[partIndex].qty = (allParts[partIndex].qty || 0) - usedQty;
+        if (allParts[partIndex].qty < 0) allParts[partIndex].qty = 0;
+      }
+    }
+    saveData(PART_KEY, allParts);
 
     const newServis = {
       id: generateId(),
@@ -326,12 +454,16 @@ function showDetail(id) {
   document.getElementById("detailTotal").textContent = formatCurrency(servis.total);
   
   const itemsList = document.getElementById("detailItems");
-  itemsList.innerHTML = servis.items.map(item => `
+  itemsList.innerHTML = servis.items.map(item => {
+    const qtyDisplay = item.qty ? ` × ${item.qty}` : "";
+    const subtotal = item.price * (item.qty || 1);
+    return `
     <li class="list-group-item d-flex justify-content-between align-items-center">
-      ${sanitizeHTML(item.name)}
-      <span class="badge bg-primary rounded-pill">${formatCurrency(item.price)}</span>
+      ${sanitizeHTML(item.name)}${qtyDisplay}
+      <span class="badge bg-primary rounded-pill">${formatCurrency(subtotal)}</span>
     </li>
-  `).join('');
+  `;
+  }).join('');
   
   const modal = new bootstrap.Modal(document.getElementById("modalDetail"));
   modal.show();
@@ -372,14 +504,20 @@ function updateStatus(id, newStatus) {
 // ======================
 function resetForm() {
   document.getElementById("tanggal").value = "";
+  document.getElementById("customerSearch").value = "";
   document.getElementById("customerSelect").value = "";
   document.getElementById("itemContainer").innerHTML = "";
   document.getElementById("totalDisplay").innerText = formatCurrency(0);
+  document.getElementById("itemCountDisplay").innerText = "0";
+  document.getElementById("qtyCountDisplay").innerText = "0";
   
   // Remove validation classes
   document.getElementById("tanggal").classList.remove("is-invalid");
   document.getElementById("customerSelect").classList.remove("is-invalid");
 
+  // Refresh customer dropdown
+  renderCustomerDropdown();
+  
   addItemRow();
 }
 
