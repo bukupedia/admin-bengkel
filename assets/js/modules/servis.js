@@ -67,7 +67,7 @@ function addItemRow() {
   row.className = "row g-2 mb-2 item-row";
 
   // dropdown options
-  let options = `<option value="">-- Pilih Sparepart --</option>`;
+  let options = `<option value="">-- Pilih Produk --</option>`;
   parts.forEach(p => {
     const safeName = sanitizeHTML(p.name);
     options += `<option value="${p.id}" data-price="${p.price}">${safeName}</option>`;
