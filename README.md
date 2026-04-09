@@ -1,36 +1,13 @@
-# [Beta-11] Changes Made
+# [Beta-12] Changes Made
 
 Modifikasi pada modal tambah servis:
 
-## 1. Pencarian Pelanggan
-- Ditambahkan input pencarian di atas dropdown pelanggan
-- Pencarian berdasarkan nama atau nomor polisi
-- Hasil pencarian langsung difilter di dropdown
+1. **Input pencarian pelanggan** - Dipindahkan ke dalam area dropdown (di dalam div `customer-dropdown`), sehingga sekarang input pencarian berada di atas dropdown select pelanggan.
 
-## 2. Pencarian Sparepart
-- Setiap baris item sekarang memiliki input pencarian sparepart
-- Menampilkan informasi stok: ✓ (Stok: X) atau ✗ (Stok: 0)
-- Sparepart dengan stok 0 akan disabled (tidak bisa dipilih)
-- Filter langsung saat mengetik
+2. **Input pencarian sparepart** - Dipindahkan ke dalam area dropdown (di dalam div `part-dropdown`), sehingga sekarang input pencarian berada di atas dropdown select sparepart di setiap baris item.
 
-## 3. Management Quantity
-- Ditambahkan field quantity untuk setiap sparepart
-- Quantity default adalah 1
-- Max quantity dibatasi sesuai stok yang tersedia
-- Stok sparepart akan dikurangi secara otomatis saat menyimpan servis
-- Detail servis menampilkan quantity dan subtotal per item
+3. **Pesan konfirmasi** - Teks "Stok sparepart akan dikurangi..." dihapus dari pesan konfirmasi.
 
-## 4. Perbaikan Perhitungan
-- Total sekarang dihitung dengan formula: Harga × Quantity
-- Ditampilkan jumlah item dan total quantity
-- sebelum menyimpan, muncul konfirmasi preview yang menampilkan:
-  - Tanggal
-  - Nama pelanggan
-  - Jumlah item
-  - Total quantity
-  - Total biaya
-  - Pesan bahwa stok sparepart akan dikurangi
-
-Semua perubahan disimpan di:
-- `servis.html` - Struktur modal
-- `assets/js/modules/servis.js` - Logika aplikasi
+Perubahan diterapkan pada file:
+- servis.html (untuk customer dropdown)
+- assets/js/modules/servis.js (untuk sparepart dropdown)
