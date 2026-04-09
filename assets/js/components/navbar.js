@@ -39,7 +39,7 @@ export function renderNavbar() {
             </li>
 
             <li class="nav-item">
-              <a class="nav-link ${currentPage === "sparepart" ? "active" : ""}" href="sparepart.html">⚙️ Sparepart</a>
+              <a class="nav-link ${currentPage === "produk" ? "active" : ""}" href="produk.html">📦 Produk</a>
             </li>
 
             <li class="nav-item dropdown">
