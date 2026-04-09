@@ -41,6 +41,13 @@ export function isAuthenticated() {
       return false;
     }
     
+    // Check if session is about to expire (within 5 minutes)
+    const timeRemaining = sessionData.expiresAt - Date.now();
+    if (timeRemaining < 5 * 60 * 1000 && timeRemaining > 0) {
+      // Show warning but don't logout yet
+      console.warn("Session expiring soon");
+    }
+    
     // Extend session on activity (sliding expiration)
     sessionData.expiresAt = Date.now() + SESSION_DURATION;
     localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
