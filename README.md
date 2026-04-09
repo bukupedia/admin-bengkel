@@ -11,3 +11,20 @@ Modifikasi pada modal tambah servis:
 Perubahan diterapkan pada file:
 - servis.html (untuk customer dropdown)
 - assets/js/modules/servis.js (untuk sparepart dropdown)
+
+## Update
+
+Input pencarian pelanggan dan sparepart diganti menggunakan style combobox:
+
+**Perubahan yang dilakukan:**
+
+1. **Input pencarian pelanggan** - Sekarang menggunakan `<input>` dengan `list="customerList"` dan `<datalist>`:
+   - Pengguna bisa mengetik untuk mencari
+   - Saat mengetik, suggestions akan muncul (seperti branch selector di GitHub)
+   - Pilih dari dropdown atau ketik manual
+
+2. **Input pencarian sparepart** - Juga menggunakan `<input>` dengan `list="partDatalist"`:
+   - Sama seperti pelanggan, menggunakan combobox style GitHub
+   - Tampilkan nama sparepart + info stok (Stok: X)
+
+Sekarang saat pengguna klik pada field pelanggan atau sparepart, akan muncul dropdown dengan suggestions yang bisa difilter secara otomatis oleh browser (fitur native `<datalist>`).
