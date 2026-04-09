@@ -73,16 +73,33 @@ function setupEvent() {
   const btnSave = document.getElementById("savePart");
   const table = document.getElementById("partTable");
   const searchInput = document.getElementById("searchPart");
+  const clearSearch = document.getElementById("clearSearchPart");
 
   // Search functionality with debounce
   let searchTimeout;
   searchInput.addEventListener("input", (e) => {
+    const value = e.target.value;
+    // Show/hide clear button
+    if (clearSearch) {
+      clearSearch.style.display = value ? "block" : "none";
+    }
+    
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      const query = e.target.value.toLowerCase();
+      const query = value.toLowerCase();
       renderTable(query);
     }, 300);
   });
+
+  // Clear search button
+  if (clearSearch) {
+    clearSearch.addEventListener("click", () => {
+      searchInput.value = "";
+      clearSearch.style.display = "none";
+      renderTable("");
+      searchInput.focus();
+    });
+  }
 
   btnSave.addEventListener("click", () => {
     const nameInput = document.getElementById("namaPart");
