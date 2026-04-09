@@ -66,16 +66,31 @@ function setupEvent() {
   const btnSave = document.getElementById("savePelanggan");
   const table = document.getElementById("pelangganTable");
   const searchInput = document.getElementById("searchPelanggan");
+  const clearSearch = document.getElementById("clearSearchPelanggan");
 
   // Search functionality with debounce
   let searchTimeout;
   searchInput.addEventListener("input", (e) => {
+    const value = e.target.value;
+    // Show/hide clear button
+    clearSearch.style.display = value ? "block" : "none";
+    
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
-      const query = e.target.value.toLowerCase();
+      const query = value.toLowerCase();
       renderTable(query);
     }, 300);
   });
+
+  // Clear search button
+  if (clearSearch) {
+    clearSearch.addEventListener("click", () => {
+      searchInput.value = "";
+      clearSearch.style.display = "none";
+      renderTable("");
+      searchInput.focus();
+    });
+  }
 
   btnSave.addEventListener("click", () => {
     const nameInput = document.getElementById("namaPelanggan");
