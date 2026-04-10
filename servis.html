@@ -19,7 +19,19 @@
     </button>
   </div>
 
-  <input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari berdasarkan nama pelanggan atau nomor polisi...">
+  <div class="row mt-3">
+    <div class="col-md-4">
+      <input type="text" id="searchServis" class="form-control" placeholder="Cari berdasarkan nama pelanggan atau nomor polisi...">
+    </div>
+    <div class="col-md-3">
+      <select id="filterStatus" class="form-select">
+        <option value="">Semua Status</option>
+        <option value="menunggu">Menunggu</option>
+        <option value="servicing">Diproses</option>
+        <option value="selesai">Selesai</option>
+      </select>
+    </div>
+  </div>
 
   <div class="table-responsive">
     <table class="table table-bordered mt-3">
@@ -51,20 +63,47 @@
 
   <input id="tanggal" type="date" class="form-control mb-2">
 
-  <!-- Pelanggan Datalist -->
+  <!-- Pelanggan Datalist - Read-only after selection -->
   <div class="mb-3">
     <label class="form-label">Pelanggan</label>
-    <input type="text" id="customerInput" class="form-control mb-2" placeholder="Cari pelanggan..." list="customerDatalist">
+    <div class="input-group">
+      <input type="text" id="customerInput" class="form-control" placeholder="Cari pelanggan..." list="customerDatalist">
+      <button class="btn btn-outline-secondary" type="button" id="btnClearCustomer" title="Clear">✕</button>
+    </div>
     <datalist id="customerDatalist"></datalist>
     <input type="hidden" id="customerSelect">
+    <div id="customerValidationMsg" class="invalid-feedback" style="display: none;">Nama pelanggan tidak ditemukan dalam database</div>
+    <!-- Display selected customer info (read-only) -->
+    <div id="selectedCustomerInfo" class="mt-2 p-2 bg-light rounded" style="display: none;">
+      <small class="text-muted">Nama: <strong id="displayCustomerName"></strong></small><br>
+      <small class="text-muted">No. Polisi: <strong id="displayPoliceNumber"></strong></small>
+    </div>
+  </div>
+
+  <!-- Keluhan Pelanggan -->
+  <div class="mb-3">
+    <label class="form-label">Keluhan Kendaraan</label>
+    <textarea id="customerComplaint" class="form-control" rows="2" placeholder="Ceritakan keluhan atau masalah pada kendaraan..."></textarea>
+    <small class="text-muted">Keluhan ini akan disampaikan kepada mekanik yang akan mengerjakan</small>
   </div>
 
   <!-- ITEM LIST -->
-  <div id="itemContainer"></div>
+  <div class="mb-3">
+    <label class="form-label">Sparepart</label>
+    <div id="itemContainer"></div>
+    <button class="btn btn-sm btn-secondary mb-2" id="addItem">
+      + Tambah Sparepart
+    </button>
+  </div>
 
-  <button class="btn btn-sm btn-secondary mb-3" id="addItem">
-    + Tambah Item
-  </button>
+  <!-- Tambah Jasa -->
+  <div class="mb-3">
+    <label class="form-label">Jasa (Pekerjaan)</label>
+    <div id="jasaContainer"></div>
+    <button class="btn btn-sm btn-outline-primary mb-2" id="addJasa">
+      + Tambah Jasa
+    </button>
+  </div>
 
   <!-- TOTAL -->
   <div class="d-flex justify-content-between align-items-center">
@@ -94,16 +133,27 @@
         <p><strong>No. Polisi:</strong> <span id="detailPoliceNumber"></span></p>
         <p><strong>Tanggal:</strong> <span id="detailTanggal"></span></p>
         <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+        <p><strong>Keluhan:</strong> <span id="detailComplaint"></span></p>
 
         <hr>
 
-        <h6>Item:</h6>
-        <ul id="detailItems" class="list-group mb-3"></ul>
+        <div id="detailItemsSection">
+          <h6>Item:</h6>
+          <ul id="detailItems" class="list-group mb-3"></ul>
+        </div>
+
+        <div id="editItemsSection" style="display: none;">
+          <h6>Edit Item:</h6>
+          <div id="editItemContainer"></div>
+          <button class="btn btn-sm btn-secondary mb-3" id="editAddItem">+ Tambah Item</button>
+        </div>
 
         <h5>Total: <span id="detailTotal"></span></h5>
       </div>
 
       <div class="modal-footer">
+        <button class="btn btn-warning" id="btnEditItems" style="display: none;">Edit Item</button>
+        <button class="btn btn-primary" id="btnSaveEdit" style="display: none;">Simpan Perubahan</button>
         <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
       </div>
 
@@ -125,6 +175,7 @@
         <p><strong>Pelanggan:</strong> <span id="previewCustomer"></span></p>
         <p><strong>No. Polisi:</strong> <span id="previewPolice"></span></p>
         <p><strong>Tanggal:</strong> <span id="previewDate"></span></p>
+        <p><strong>Keluhan:</strong> <span id="previewComplaint"></span></p>
 
         <hr>
 
