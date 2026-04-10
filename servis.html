@@ -51,7 +51,13 @@
 
   <input id="tanggal" type="date" class="form-control mb-2">
 
-  <select id="customerSelect" class="form-control mb-3"></select>
+  <!-- Pelanggan Datalist -->
+  <div class="mb-3">
+    <label class="form-label">Pelanggan</label>
+    <input type="text" id="customerInput" class="form-control mb-2" placeholder="Cari pelanggan..." list="customerDatalist">
+    <datalist id="customerDatalist"></datalist>
+    <input type="hidden" id="customerSelect">
+  </div>
 
   <!-- ITEM LIST -->
   <div id="itemContainer"></div>
@@ -61,7 +67,10 @@
   </button>
 
   <!-- TOTAL -->
-  <h5>Total: <span id="totalDisplay">Rp 0</span></h5>
+  <div class="d-flex justify-content-between align-items-center">
+    <h5>Total: <span id="totalDisplay">Rp 0</span></h5>
+    <button class="btn btn-info btn-sm" id="previewServis">Pratinjau</button>
+  </div>
 
 </div>
       <div class="modal-footer">
@@ -92,6 +101,37 @@
         <ul id="detailItems" class="list-group mb-3"></ul>
 
         <h5>Total: <span id="detailTotal"></span></h5>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+  <!-- Modal Preview -->
+  <div class="modal fade" id="modalPreview">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      
+      <div class="modal-header">
+        <h5>Pratinjau Servis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <p><strong>Pelanggan:</strong> <span id="previewCustomer"></span></p>
+        <p><strong>No. Polisi:</strong> <span id="previewPolice"></span></p>
+        <p><strong>Tanggal:</strong> <span id="previewDate"></span></p>
+
+        <hr>
+
+        <h6>Item:</h6>
+        <ul id="previewItems" class="list-group mb-3"></ul>
+
+        <h5>Total: <span id="previewTotal"></span></h5>
       </div>
 
       <div class="modal-footer">
