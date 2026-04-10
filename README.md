@@ -32,5 +32,5 @@ Codebase: beta-14
 
 2. **Edit Item pada Modal Detail:**
    - Tombol "Edit Item" hanya muncul jika status belum "Selesai"
-   - Admin dapat mengedit item servo selama status belum selesai
+   - Admin dapat mengedit item servis selama status belum selesai
    - Setelah diedit, total akan dihitung ulang secara otomatis
