@@ -19,9 +19,10 @@
     </button>
   </div>
 
-  <input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari berdasarkan nama pelanggan atau nomor polisi...">
-
-  <div class="row mt-3">
+  <div class="row mt-3 g-3">
+    <div class="col-md-6">
+      <input type="text" id="searchServis" class="form-control" placeholder="🔍 Cari berdasarkan nama pelanggan atau nomor polisi...">
+    </div>
     <div class="col-md-4">
       <select id="statusFilter" class="form-select">
         <option value="">Semua Status</option>
@@ -29,6 +30,9 @@
         <option value="servicing">Diproses</option>
         <option value="selesai">Selesai</option>
       </select>
+    </div>
+    <div class="col-md-2">
+      <span id="servisCount" class="badge bg-secondary fs-6 w-100 d-flex align-items-center justify-content-center" style="padding: 0.5rem;">0 Servis</span>
     </div>
   </div>
 
