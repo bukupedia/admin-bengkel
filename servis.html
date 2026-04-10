@@ -21,6 +21,17 @@
 
   <input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari berdasarkan nama pelanggan atau nomor polisi...">
 
+  <div class="row mt-3">
+    <div class="col-md-4">
+      <select id="statusFilter" class="form-select">
+        <option value="">Semua Status</option>
+        <option value="menunggu">Menunggu</option>
+        <option value="servicing">Diproses</option>
+        <option value="selesai">Selesai</option>
+      </select>
+    </div>
+  </div>
+
   <div class="table-responsive">
     <table class="table table-bordered mt-3">
       <thead>
@@ -54,9 +65,16 @@
   <!-- Pelanggan Datalist -->
   <div class="mb-3">
     <label class="form-label">Pelanggan</label>
-    <input type="text" id="customerInput" class="form-control mb-2" placeholder="Cari pelanggan..." list="customerDatalist">
+    <input type="text" id="customerInput" class="form-control mb-2" placeholder="Cari pelanggan..." list="customerDatalist" readonly>
     <datalist id="customerDatalist"></datalist>
     <input type="hidden" id="customerSelect">
+    <div id="customerError" class="invalid-feedback d-block" style="display: none;"></div>
+    <small id="customerHelp" class="form-text text-muted">Pilih pelanggan dari daftar</small>
+  </div>
+
+  <div class="mb-3">
+    <label class="form-label">Nomor Polisi</label>
+    <input type="text" id="policeNumberInput" class="form-control" readonly>
   </div>
 
   <!-- ITEM LIST -->
@@ -70,6 +88,11 @@
   <div class="d-flex justify-content-between align-items-center">
     <h5>Total: <span id="totalDisplay">Rp 0</span></h5>
     <button class="btn btn-info btn-sm" id="previewServis">Pratinjau</button>
+  </div>
+
+  <div class="mb-3 mt-3">
+    <label class="form-label">Catatan</label>
+    <textarea id="catatanInput" class="form-control" rows="2" placeholder="Tambahkan catatan (opsional)"></textarea>
   </div>
 
 </div>
@@ -94,6 +117,7 @@
         <p><strong>No. Polisi:</strong> <span id="detailPoliceNumber"></span></p>
         <p><strong>Tanggal:</strong> <span id="detailTanggal"></span></p>
         <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+        <p><strong>Catatan:</strong> <span id="detailCatatan"></span></p>
 
         <hr>
 
