@@ -11,19 +11,23 @@ const PART_KEY = "parts";
 // INIT
 // ======================
 export function initServisPage() {
-  // Set today's date as default and minimum date
+  // Set today's date as default
   const today = new Date().toISOString().split('T')[0];
   const tanggalInput = document.getElementById("tanggal");
   tanggalInput.value = today;
-  tanggalInput.min = today;
+  // Note: min is set dynamically based on edit mode
   
   renderCustomerDatalist();
   const searchInput = document.getElementById("searchServis");
   renderTable(searchInput ? searchInput.value.toLowerCase() : "");
   setupEvent();
-  addItemRow(); // default 1 row
   setupSearch();
   setupStatusFilter();
+  
+  // Initialize with one empty item row
+  if (!document.querySelector('.item-row')) {
+    addItemRow();
+  }
 }
 
 // ======================
@@ -59,6 +63,8 @@ function setupStatusFilter() {
 // ======================
 // DATALIST CUSTOMER
 // ======================
+let customerListenersAdded = false;
+
 function renderCustomerDatalist(customers = null) {
   const custData = customers || getData(CUSTOMER_KEY);
   const input = document.getElementById("customerInput");
@@ -70,6 +76,10 @@ function renderCustomerDatalist(customers = null) {
     const police = c.policeNumber ? ` (${sanitizeHTML(c.policeNumber)})` : "";
     datalist.innerHTML += `<option value="${safeName}${police}" data-id="${c.id}" data-police="${c.policeNumber || ''}">`;
   });
+  
+  // Only add listeners once
+  if (customerListenersAdded) return;
+  customerListenersAdded = true;
   
   // Handle selection
   input.addEventListener("input", () => {
@@ -315,6 +325,7 @@ function renderTable(searchQuery = "") {
   const table = document.getElementById("servisTable");
   const statusFilter = document.getElementById("statusFilter");
   const selectedStatus = statusFilter ? statusFilter.value : "";
+  const countBadge = document.getElementById("servisCount");
   
   table.innerHTML = "";
   
@@ -334,12 +345,26 @@ function renderTable(searchQuery = "") {
     filteredData = filteredData.filter(item => item.status === selectedStatus);
   }
   
+  // Update count badge
+  if (countBadge) {
+    countBadge.textContent = `${filteredData.length} Servis`;
+    if (filteredData.length > 0) {
+      countBadge.className = "badge bg-primary fs-6 w-100 d-flex align-items-center justify-content-center";
+      countBadge.style.padding = "0.5rem";
+    } else {
+      countBadge.className = "badge bg-secondary fs-6 w-100 d-flex align-items-center justify-content-center";
+      countBadge.style.padding = "0.5rem";
+    }
+  }
+  
   if (filteredData.length === 0) {
-    table.innerHTML = `<tr><td colspan="6" class="text-center py-4">
-      <div class="text-muted">
-        <p class="mb-1">🔧</p>
-        <p>${searchQuery || selectedStatus ? "Tidak ada hasil pencarian" : "Belum ada data servis"}</p>
-        <small>${searchQuery || selectedStatus ? "Coba kata kunci lain" : "Klik tombol 'Tambah Servis' untuk menambah data"}</small>
+    const isFiltered = searchQuery || selectedStatus;
+    table.innerHTML = `<tr><td colspan="6">
+      <div class="empty-state-container">
+        <div class="empty-icon">🔧</div>
+        <h5>${isFiltered ? "Tidak Ada Hasil" : "Belum Ada Servis"}</h5>
+        <p>${isFiltered ? "Coba ubah kata kunci atau filter" : "Klik tombol 'Tambah Servis' untuk membuat data servis pertama"}</p>
+        ${!isFiltered ? '<button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalServis">+ Tambah Servis Sekarang</button>' : ''}
       </div>
     </td></tr>`;
     return;
@@ -364,18 +389,20 @@ function renderTable(searchQuery = "") {
     table.innerHTML += `
       <tr>
         <td>${formatDate(safeTanggal)}</td>
-        <td>${customerName}</td>
-        <td>${customerPoliceNumber}</td>
-        <td>${formatCurrency(item.total)}</td>
+        <td><strong>${customerName}</strong></td>
+        <td><code>${customerPoliceNumber}</code></td>
+        <td><strong>${formatCurrency(item.total)}</strong></td>
         <td>
           <span class="badge bg-${statusInfo.class}">${statusInfo.text}</span>
         </td>
         <td>
-          <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
-          <button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit" ${editBtnDisabled}>✏️</button>
-          ${item.status === "menunggu" ? `<button class="btn btn-primary btn-sm btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
-          ${item.status === "servicing" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
-          <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
+          <div class="btn-group btn-group-sm" role="group">
+            <button class="btn btn-info btn-action btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
+            <button class="btn btn-warning btn-action btn-edit" data-id="${item.id}" title="Edit" ${editBtnDisabled}>✏️</button>
+            ${item.status === "menunggu" ? `<button class="btn btn-primary btn-action btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
+            ${item.status === "servicing" ? `<button class="btn btn-success btn-action btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
+            <button class="btn btn-danger btn-action btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
+          </div>
         </td>
       </tr>
     `;
@@ -479,8 +506,9 @@ function setupEvent() {
       document.getElementById("tanggal").classList.remove("is-invalid");
     }
     
+    // In new mode, prevent past dates. In edit mode, allow any date (original date)
     const today = new Date().toISOString().split('T')[0];
-    if (tanggal < today) {
+    if (!isEditMode && tanggal < today) {
       document.getElementById("tanggal").classList.add("is-invalid");
       errors.push("• Tidak dapat memilih tanggal yang sudah lewat");
     }
@@ -535,6 +563,30 @@ function setupEvent() {
       const servisIndex = data.findIndex(s => s.id == editId);
       
       if (servisIndex !== -1) {
+        // Step 1: Restore stock for original items (reverse previous deduction)
+        const originalItems = data[servisIndex].items;
+        const partData = getData(PART_KEY);
+        originalItems.forEach(origItem => {
+          if (origItem.partId) {
+            const partIndex = partData.findIndex(p => p.id == origItem.partId);
+            if (partIndex !== -1) {
+              partData[partIndex].qty = (partData[partIndex].qty || 0) + origItem.qty;
+            }
+          }
+        });
+        
+        // Step 2: Deduct stock for new items
+        items.forEach(item => {
+          if (item.partId) {
+            const partIndex = partData.findIndex(p => p.id == item.partId);
+            if (partIndex !== -1) {
+              partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
+            }
+          }
+        });
+        saveData(PART_KEY, partData);
+        
+        // Step 3: Update servis data
         data[servisIndex].tanggal = tanggal;
         data[servisIndex].customerId = customerId;
         data[servisIndex].items = items;
@@ -647,13 +699,48 @@ function showDetail(id) {
 // DELETE
 // ======================
 function deleteServis(id) {
-  if (!confirm("Yakin ingin menghapus data servis ini?")) return;
+  const data = getData(KEY);
+  const servis = data.find(s => s.id == id);
   
-  // Note: Tidak mengembalikan stok karena servis sudah dihapus
-  let data = getData(KEY);
+  if (!servis) return;
+  
+  // Check if service is still active (not completed)
+  const isActive = servis.status !== "selesai";
+  
+  // Calculate total items that would be restored
+  let restoredItems = [];
+  if (isActive) {
+    servis.items.forEach(item => {
+      if (item.partId) {
+        restoredItems.push(`${item.name} (${item.qty} unit)`);
+      }
+    });
+  }
+  
+  let confirmMsg = "Yakin ingin menghapus data servis ini?";
+  if (isActive && restoredItems.length > 0) {
+    confirmMsg += "\n\n⚠️ Stok sparepart berikut akan dikembalikan:\n• " + restoredItems.join("\n• ");
+  }
+  
+  if (!confirm(confirmMsg)) return;
+  
+  // Restore stock for active services
+  if (isActive) {
+    const partData = getData(PART_KEY);
+    servis.items.forEach(item => {
+      if (item.partId) {
+        const partIndex = partData.findIndex(p => p.id == item.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+        }
+      }
+    });
+    saveData(PART_KEY, partData);
+  }
+  
   data = data.filter(item => item.id != id);
-  
   saveData(KEY, data);
+  
   const searchInput = document.getElementById("searchServis");
   renderTable(searchInput ? searchInput.value.toLowerCase() : "");
 }
