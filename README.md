@@ -1,38 +1,45 @@
-# [Beta-9] Changes Made
+# [Beta-14] Changes Made
 
-Audit UI/UX, Security and Fix Issues
+Codebase: beta-9
 
-## Security Fixes
+## Fitur yang Ditambahkan:
 
-### 1. Authentication Improvements
-- **Removed hardcoded credentials** from login page footer (index.html)
-- **Added rate limiting** with 5 max login attempts and 5-minute lockout (auth.js)
-- **Implemented session fingerprinting** to detect potential session theft (auth.js)
-- **Added sliding session expiration** - session extends on activity (auth.js)
-- **Added security warning comments** about using backend authentication in production
+### 1. Datalist untuk Pelanggan
+- Menggunakan `<input>` dengan `<datalist>` untuk fitur pencarian
+- Menampilkan nama pelanggan + nomor polisi di opsi
+- Filter langsung hasil pencarian saat mengetik
+- Validasi jika pelanggan yang dipilih tidak valid
 
-### 2. Input Validation & Sanitization
-- **Enhanced input validation** for numeric fields (price, quantity) in sparepart.js and pelanggan.js
-- **Added input sanitization** - trimming, length limits (max 100 chars for names), and stripping of `<>` characters
-- **Applied XSS protection** - sanitizeHTML() used in dashboard.js when rendering customer data
+### 2. Datalist untuk Sparepart
+- Setiap baris item memiliki datalist unik
+- Menampilkan informasi stok di setiap opsi
+- Sparepart dengan stok 0 otomatis disabled (tidak bisa dipilih)
+- Filter langsung saat mengetik
 
-### 3. Security Headers & Best Practices
-- Added proper `autocomplete` attributes to login form fields
-- Added `role="alert"` and `aria-live="polite"` to error messages for accessibility
+### 3. Tombol Plus/Minus untuk Quantity
+- Desain seperti keranjang belanja e-commerce
+- Tombol `-` untuk mengurangi, `+` untuk menambah
+- Batas minimum: 1
+- Batas maksimum: sesuai stok tersedia
 
-## UI/UX Fixes
+### 4. Informasi Stok
+- Tampil di bawah input sparepart setelah dipilih
+- warna hijau untuk stok tersedia, merah untuk stok rendah
+- Validasi real-time saat jumlah diubah
 
-### 1. Responsive Layout
-- **Fixed dashboard cards** - Changed from fixed `col-md-2` to responsive `col-6 col-md-4 col-lg-2` grid
-- Added `g-3` gap class for proper spacing
+### 5. Pengurangan Stok Saat Simpan
+- Stok sparepart dikurangi sesuai quantity yang digunakan
+- Hanya sparepart yang dipilih dari datalist yang stoknya berkurang
+- Item manual tidak mengurangi stok
 
-### 2. Accessibility Improvements
-- Added `aria-label` to login form and navbar toggle button
-- Added `aria-hidden="true"` to decorative icons (stat icons)
-- Added proper form labels and descriptions
-- Added `aria-live="polite"` to error messages for screen reader users
+### 6. Audit dan Validasi
+- Validasi lengkap: tanggal, pelanggan, minimal 1 item
+- Tombol "Pratinjau" untuk melihat detail sebelum simpan
+- Dialog konfirmasi dengan detail perhitungan sebelum menyimpan:
+  - Nama item, harga, quantity, subtotal per item
+  - Total keseluruhan
+  - Informasi bahwa stok akan dikurangi
 
-### 3. Performance Improvements
-- **Added debounce** (300ms) to search functionality in pelanggan.js, sparepart.js, and servis.js to improve performance
-
-All security vulnerabilities identified have been addressed, and the UI/UX has been improved for better usability and accessibility.
+## File yang Dimodifikasi:
+- `servis.html` - Template modal dengan datalist dan preview
+- `assets/js/modules/servis.js` - Logika lengkap dengan semua fitur
