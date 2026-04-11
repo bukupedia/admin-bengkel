@@ -4,6 +4,7 @@ import { getData, saveData } from "../storage.js";
 import { generateId, sanitizeHTML } from "../utils.js";
 
 const KEY = "customers";
+const SERVIS_KEY = "servis";
 
 // INIT PAGE
 export function initPelangganPage() {
@@ -175,7 +176,16 @@ function setupEvent() {
 
 // DELETE CUSTOMER
 function deleteCustomer(id) {
-  if (!confirm("Yakin ingin menghapus pelanggan ini?")) return;
+  // Check if customer has related servis records
+  const servisData = getData(SERVIS_KEY);
+  const relatedServis = servisData.filter(s => s.customerId == id);
+  
+  let confirmMessage = "Yakin ingin menghapus pelanggan ini?";
+  if (relatedServis.length > 0) {
+    confirmMessage = `Pelanggan ini memiliki ${relatedServis.length} record servis terkait.\nHapus pelanggan akan menyebabkan data servis tidak dapat ditampilkan dengan benar.\n\nApakah Anda tetap ingin menghapus?`;
+  }
+  
+  if (!confirm(confirmMessage)) return;
   
   let data = getData(KEY);
   data = data.filter(item => item.id != id);
