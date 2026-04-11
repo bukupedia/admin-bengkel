@@ -19,10 +19,23 @@ export function initServisPage() {
   
   renderCustomerDatalist();
   const searchInput = document.getElementById("searchServis");
-  renderTable(searchInput ? searchInput.value.toLowerCase() : "");
+  const statusFilter = document.getElementById("filterStatus");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
   setupEvent();
   addItemRow(); // default 1 row
   setupSearch();
+  setupStatusFilter();
+}
+
+// ======================
+// STATUS FILTER
+// ======================
+function setupStatusFilter() {
+  const statusFilter = document.getElementById("filterStatus");
+  statusFilter.addEventListener("change", () => {
+    const searchInput = document.getElementById("searchServis");
+    renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter.value);
+  });
 }
 
 // ======================
@@ -37,7 +50,8 @@ function setupSearch() {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
       const query = e.target.value.toLowerCase();
-      renderTable(query);
+      const statusFilter = document.getElementById("filterStatus");
+      renderTable(query, statusFilter ? statusFilter.value : "");
     }, 300);
   });
 }
@@ -49,6 +63,7 @@ function renderCustomerDatalist(customers = null) {
   const custData = customers || getData(CUSTOMER_KEY);
   const input = document.getElementById("customerInput");
   const datalist = document.getElementById("customerDatalist");
+  const customerNote = document.getElementById("customerNote");
   
   datalist.innerHTML = "";
   custData.forEach(c => {
@@ -64,8 +79,15 @@ function renderCustomerDatalist(customers = null) {
     if (selectedOption) {
       hiddenSelect.value = selectedOption.dataset.id;
       input.classList.remove("is-invalid");
+      customerNote.style.display = "none";
+    } else if (input.value) {
+      // User typed something that doesn't match any option
+      hiddenSelect.value = "";
+      customerNote.textContent = "Pelanggan tidak ditemukan";
+      customerNote.style.display = "block";
     } else {
       hiddenSelect.value = "";
+      customerNote.style.display = "none";
     }
   });
   
@@ -75,9 +97,14 @@ function renderCustomerDatalist(customers = null) {
     if (selectedOption) {
       hiddenSelect.value = selectedOption.dataset.id;
       input.classList.remove("is-invalid");
+      customerNote.style.display = "none";
     } else if (input.value) {
       // User typed something that doesn't match exactly
       input.classList.add("is-invalid");
+      customerNote.textContent = "Pelanggan tidak ditemukan";
+      customerNote.style.display = "block";
+    } else {
+      customerNote.style.display = "none";
     }
   });
 }
@@ -115,22 +142,20 @@ function addItemRow() {
   });
   
   row.innerHTML = `
-    <div class="col-md-3">
+    <div class="col-md-4">
       <label class="form-label small">Sparepart</label>
-      <input type="text" class="form-control part-input" placeholder="Cari sparepart..." list="partDatalist-${rowId}">
+      <div class="input-group">
+        <input type="text" class="form-control part-input" placeholder="Cari sparepart..." list="partDatalist-${rowId}" readonly>
+        <button type="button" class="btn btn-outline-secondary btn-clear-part" title="Hapus pilihan">✕</button>
+      </div>
       <datalist id="partDatalist-${rowId}">${options}</datalist>
       <input type="hidden" class="part-id">
-      <div class="stock-info small text-muted mt-1"></div>
+      <div class="part-note small mt-1" style="display: none;"></div>
     </div>
 
-    <div class="col-md-2">
-      <label class="form-label small">Nama Manual</label>
-      <input type="text" class="form-control item-name" placeholder="Nama item">
-    </div>
-
-    <div class="col-md-2">
+    <div class="col-md-3">
       <label class="form-label small">Harga</label>
-      <input type="number" class="form-control item-price" placeholder="Harga" min="0">
+      <input type="number" class="form-control item-price" placeholder="Harga" min="0" readonly>
     </div>
 
     <div class="col-md-3">
@@ -152,12 +177,12 @@ function addItemRow() {
   // References
   const partInput = row.querySelector(".part-input");
   const partIdInput = row.querySelector(".part-id");
-  const nameInput = row.querySelector(".item-name");
   const priceInput = row.querySelector(".item-price");
   const qtyInput = row.querySelector(".item-qty");
-  const stockInfo = row.querySelector(".stock-info");
+  const partNote = row.querySelector(".part-note");
   const btnPlus = row.querySelector(".btn-plus");
   const btnMinus = row.querySelector(".btn-minus");
+  const btnClearPart = row.querySelector(".btn-clear-part");
   
   // Handle part selection from datalist
   partInput.addEventListener("input", () => {
@@ -167,22 +192,39 @@ function addItemRow() {
     if (selectedOption && !selectedOption.disabled) {
       partIdInput.value = selectedOption.dataset.id;
       priceInput.value = selectedOption.dataset.price;
-      nameInput.value = selectedOption.value.split(' (')[0]; // Remove stock info
       
       const stock = parseInt(selectedOption.dataset.stock);
-      stockInfo.textContent = `Stok tersedia: ${stock}`;
-      stockInfo.className = stock > 0 ? "stock-info small text-success mt-1" : "stock-info small text-danger mt-1";
+      partNote.textContent = `Stok tersedia: ${stock}`;
+      partNote.style.display = "block";
+      partNote.className = stock > 0 ? "part-note small text-success mt-1" : "part-note small text-danger mt-1";
       
       // Set max quantity based on stock
       qtyInput.max = stock;
       if (parseInt(qtyInput.value) > stock) {
         qtyInput.value = stock;
       }
+    } else if (partInput.value) {
+      // User typed something that doesn't match any option
+      partIdInput.value = "";
+      partNote.textContent = "Sparepart tidak ditemukan";
+      partNote.style.display = "block";
+      partNote.className = "part-note small text-danger mt-1";
     } else {
       partIdInput.value = "";
-      stockInfo.textContent = "";
+      partNote.style.display = "none";
     }
     
+    calculateTotal();
+  });
+  
+  // Clear part button
+  btnClearPart.addEventListener("click", () => {
+    partInput.value = "";
+    partIdInput.value = "";
+    priceInput.value = "";
+    partNote.style.display = "none";
+    qtyInput.value = 1;
+    qtyInput.max = 99;
     calculateTotal();
   });
   
@@ -268,17 +310,17 @@ function calculateTotal() {
 // ======================
 // RENDER TABLE
 // ======================
-function renderTable(searchQuery = "") {
+function renderTable(searchQuery = "", statusFilter = "") {
   const data = getData(KEY);
   const customers = getData(CUSTOMER_KEY);
   const table = document.getElementById("servisTable");
   
   table.innerHTML = "";
   
-  // Filter by search query
+  // Filter by search query and status
   let filteredData = data;
   if (searchQuery) {
-    filteredData = data.filter(item => {
+    filteredData = filteredData.filter(item => {
       const customer = customers.find(c => c.id == item.customerId);
       const customerName = customer ? customer.name.toLowerCase() : "";
       const policeNumber = customer ? (customer.policeNumber || "").toLowerCase() : "";
@@ -286,12 +328,17 @@ function renderTable(searchQuery = "") {
     });
   }
   
+  // Filter by status
+  if (statusFilter) {
+    filteredData = filteredData.filter(item => item.status === statusFilter);
+  }
+  
   if (filteredData.length === 0) {
     table.innerHTML = `<tr><td colspan="6" class="text-center py-4">
       <div class="text-muted">
         <p class="mb-1">🔧</p>
-        <p>${searchQuery ? "Tidak ada hasil pencarian" : "Belum ada data servis"}</p>
-        <small>${searchQuery ? "Coba kata kunci lain" : "Klik tombol 'Tambah Servis' untuk menambah data"}</small>
+        <p>${searchQuery || statusFilter ? "Tidak ada hasil pencarian" : "Belum ada data servis"}</p>
+        <small>${searchQuery || statusFilter ? "Coba kata kunci lain" : "Klik tombol 'Tambah Servis' untuk menambah data"}</small>
       </div>
     </td></tr>`;
     return;
@@ -388,6 +435,14 @@ function setupEvent() {
   const btnAddItem = document.getElementById("addItem");
   const btnPreview = document.getElementById("previewServis");
   const table = document.getElementById("servisTable");
+  const btnClearCustomer = document.getElementById("clearCustomer");
+  
+  // Clear customer button
+  btnClearCustomer.addEventListener("click", () => {
+    document.getElementById("customerInput").value = "";
+    document.getElementById("customerSelect").value = "";
+    document.getElementById("customerNote").style.display = "none";
+  });
   
   // Add item
   btnAddItem.addEventListener("click", addItemRow);
@@ -451,7 +506,6 @@ function setupEvent() {
     });
     
     confirmationMsg += `\nTotal: ${formatCurrency(total)}\n\n`;
-    confirmationMsg += `Stok sparepart akan dikurangi sesuai quantity yang digunakan.\n`;
     confirmationMsg += `Lanjutkan menyimpan?`;
     
     if (!confirm(confirmationMsg)) {
@@ -476,6 +530,7 @@ function setupEvent() {
       customerId,
       items,
       total,
+      catatan: document.getElementById("catatan").value,
       status: "menunggu"
     };
     
@@ -484,7 +539,9 @@ function setupEvent() {
     saveData(KEY, data);
     
     resetForm();
-    renderTable();
+    const searchInput = document.getElementById("searchServis");
+    const statusFilter = document.getElementById("filterStatus");
+    renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
     closeModal();
   });
   
@@ -557,7 +614,8 @@ function deleteServis(id) {
   
   saveData(KEY, data);
   const searchInput = document.getElementById("searchServis");
-  renderTable(searchInput ? searchInput.value.toLowerCase() : "");
+  const statusFilter = document.getElementById("filterStatus");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
 }
 
 // ======================
@@ -573,7 +631,8 @@ function updateStatus(id, newStatus) {
   
   saveData(KEY, data);
   const searchInput = document.getElementById("searchServis");
-  renderTable(searchInput ? searchInput.value.toLowerCase() : "");
+  const statusFilter = document.getElementById("filterStatus");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
 }
 
 // ======================
@@ -585,6 +644,8 @@ function resetForm() {
   document.getElementById("customerSelect").value = "";
   document.getElementById("itemContainer").innerHTML = "";
   document.getElementById("totalDisplay").innerText = formatCurrency(0);
+  document.getElementById("catatan").value = "";
+  document.getElementById("customerNote").style.display = "none";
   
   // Remove validation classes
   document.getElementById("tanggal").classList.remove("is-invalid");
