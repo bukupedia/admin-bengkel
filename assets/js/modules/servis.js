@@ -423,6 +423,11 @@ function showPreview() {
   
   document.getElementById("previewTotal").textContent = formatCurrency(total);
   
+  // Show catatan
+  const catatan = document.getElementById("catatan").value;
+  const previewCatatan = document.getElementById("previewCatatan");
+  previewCatatan.textContent = catatan || "-";
+  
   previewModal.show();
   return true;
 }
@@ -592,6 +597,10 @@ function showDetail(id) {
   const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Diproses" : "Menunggu");
   document.getElementById("detailStatus").textContent = statusText;
   document.getElementById("detailTotal").textContent = formatCurrency(servis.total);
+  
+  // Show catatan
+  const detailCatatan = document.getElementById("detailCatatan");
+  detailCatatan.textContent = servis.catatan || "-";
   
   const itemsList = document.getElementById("detailItems");
   itemsList.innerHTML = servis.items.map(item => `
