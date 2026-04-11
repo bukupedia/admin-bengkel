@@ -27,6 +27,7 @@ function loadDashboardData() {
   const servisMenunggu = servisData.filter(s => s.status === "menunggu").length;
   const servisDiproses = servisData.filter(s => s.status === "servicing").length;
   const servisSelesai = servisData.filter(s => s.status === "selesai").length;
+  const servisDibatalkan = servisData.filter(s => s.status === "dibatalkan").length;
   
   // Calculate total pendapatan (only from completed ones)
   const totalPendapatan = servisData
@@ -36,12 +37,17 @@ function loadDashboardData() {
   // Calculate total customers
   const totalPelanggan = customerData.length;
   
+  // Calculate total sparepart
+  const totalSparepart = partData.length;
+  
   // Update UI
   document.getElementById("totalServis").textContent = totalServis;
   document.getElementById("servisMenunggu").textContent = servisMenunggu;
   document.getElementById("servisDiproses").textContent = servisDiproses;
   document.getElementById("servisSelesai").textContent = servisSelesai;
+  document.getElementById("servisDibatalkan").textContent = servisDibatalkan;
   document.getElementById("totalPelanggan").textContent = totalPelanggan;
+  document.getElementById("totalSparepart").textContent = totalSparepart;
   document.getElementById("totalPendapatan").textContent = formatCurrency(totalPendapatan);
   
   // Add animation for status counts
@@ -49,7 +55,9 @@ function loadDashboardData() {
   animateValue("servisMenunggu", 0, servisMenunggu, 500);
   animateValue("servisDiproses", 0, servisDiproses, 500);
   animateValue("servisSelesai", 0, servisSelesai, 500);
+  animateValue("servisDibatalkan", 0, servisDibatalkan, 500);
   animateValue("totalPelanggan", 0, totalPelanggan, 500);
+  animateValue("totalSparepart", 0, totalSparepart, 500);
   
   // Render recent servis
   renderRecentServis(servisData);
@@ -114,7 +122,8 @@ function renderRecentServis(data) {
     const statusMap = {
       "menunggu": { class: "secondary", text: "Menunggu" },
       "servicing": { class: "warning", text: "Diproses" },
-      "selesai": { class: "success", text: "Selesai" }
+      "selesai": { class: "success", text: "Selesai" },
+      "dibatalkan": { class: "danger", text: "Dibatalkan" }
     };
     const statusInfo = statusMap[item.status] || statusMap.menunggu;
     
