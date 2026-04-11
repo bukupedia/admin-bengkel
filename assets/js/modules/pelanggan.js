@@ -67,6 +67,14 @@ function setupEvent() {
   const table = document.getElementById("pelangganTable");
   const searchInput = document.getElementById("searchPelanggan");
 
+  // Reset form when modal is closed (cancel or close without saving)
+  const modalPelanggan = document.getElementById("modalPelanggan");
+  modalPelanggan.addEventListener("hidden.bs.modal", () => {
+    clearForm();
+    // Remove edit ID
+    delete document.getElementById("savePelanggan").dataset.editId;
+  });
+
   // Search functionality with debounce
   let searchTimeout;
   searchInput.addEventListener("input", (e) => {
