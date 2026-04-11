@@ -21,6 +21,16 @@
 
   <input type="text" id="searchServis" class="form-control mt-3" placeholder="Cari berdasarkan nama pelanggan atau nomor polisi...">
 
+  <div class="mt-3">
+    <label class="form-label">Filter Status:</label>
+    <select id="filterStatus" class="form-select" style="width: auto; display: inline-block;">
+      <option value="">Semua</option>
+      <option value="menunggu">Menunggu</option>
+      <option value="servicing">Diproses</option>
+      <option value="selesai">Selesai</option>
+    </select>
+  </div>
+
   <div class="table-responsive">
     <table class="table table-bordered mt-3">
       <thead>
@@ -54,9 +64,13 @@
   <!-- Pelanggan Datalist -->
   <div class="mb-3">
     <label class="form-label">Pelanggan</label>
-    <input type="text" id="customerInput" class="form-control mb-2" placeholder="Cari pelanggan..." list="customerDatalist">
+    <div class="input-group">
+      <input type="text" id="customerInput" class="form-control" placeholder="Cari pelanggan..." list="customerDatalist" readonly>
+      <button type="button" class="btn btn-outline-secondary" id="clearCustomer" title="Hapus pilihan">✕</button>
+    </div>
     <datalist id="customerDatalist"></datalist>
     <input type="hidden" id="customerSelect">
+    <div id="customerNote" class="small text-danger mt-1" style="display: none;"></div>
   </div>
 
   <!-- ITEM LIST -->
@@ -65,6 +79,12 @@
   <button class="btn btn-sm btn-secondary mb-3" id="addItem">
     + Tambah Item
   </button>
+
+  <!-- Catatan -->
+  <div class="mb-3">
+    <label class="form-label">Catatan</label>
+    <textarea id="catatan" class="form-control" rows="2" placeholder="Tambahkan catatan (opsional)"></textarea>
+  </div>
 
   <!-- TOTAL -->
   <div class="d-flex justify-content-between align-items-center">
