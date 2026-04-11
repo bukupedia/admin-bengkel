@@ -22,3 +22,27 @@ Fixed 3 bugs in the 'Tambah Servis' modal:
    - **Impact**: Prevents JavaScript error that could break the modal functionality.
 
 All fixes have been applied to `/workspace/project/admin-bengkel/assets/js/modules/servis.js`.
+
+## New:
+
+Menambahkan tampilan catatan pada modal Pratinjau Servis dan Detail Servis. Berikut perubahan yang dilakukan:
+
+**1. Modal Pratinjau Servis (servis.html):**
+- Menambahkan elemen HTML untuk menampilkan catatan:
+  ```html
+  <h6>Catatan:</h6>
+  <p id="previewCatatan" class="text-muted fst-italic"></p>
+  ```
+
+**2. Modal Detail Servis (servis.html):**
+- Menambahkan elemen HTML untuk menampilkan catatan:
+  ```html
+  <h6>Catatan:</h6>
+  <p id="detailCatatan" class="text-muted fst-italic"></p>
+  ```
+
+**3. Logika JavaScript (servis.js):**
+- Pada fungsi `showPreview()`: Menampilkan catatan dari input field ke modal preview
+- Pada fungsi `showDetail()`: Menampilkan catatan dari data servis yang tersimpan ke modal detail
+
+Kedua modal sekarang menampilkan kolom catatan. Jika catatan kosong, akan menampilkan "-".
