@@ -29,3 +29,16 @@ Codebase: beta-23
 
 3. **Recent Servis**:
    - Status "Dibatalkan" ditampilkan dengan badge merah di daftar servis terbaru
+
+Perbaikan tombol edit servis.
+
+**logika Tombol file_editor:**
+- Aktif (dapat diklik) untuk status 'Menunggu' dan 'Diproses'
+- Disabled untuk status 'Selesai' dan 'Dibatalkan'
+
+Sekarang semua tombol sudah bekerja dengan benar:
+- 👁 (View): selalu aktif untuk semua status
+- ✏ (file_editor): aktif untuk 'Menunggu' dan 'Diproses'
+- ▶ (Mulai Servis): aktif untuk 'Menunggu' saja
+- ✓ (Tandai Selesai): aktif untuk 'Diproses' saja
+- Cancel: aktif untuk 'Menunggu' saja
