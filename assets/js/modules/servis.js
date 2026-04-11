@@ -369,6 +369,7 @@ function renderTable(searchQuery = "", statusFilter = "") {
         </td>
         <td>
           <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
+          ${item.status !== "selesai" ? `<button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Servis">✏</button>` : `<button class="btn btn-secondary btn-sm" disabled title="Tidak dapat edit">✏</button>`}
           ${item.status === "menunggu" ? `<button class="btn btn-primary btn-sm btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
           ${item.status === "servicing" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
           <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
@@ -447,6 +448,23 @@ function setupEvent() {
     document.getElementById("customerInput").value = "";
     document.getElementById("customerSelect").value = "";
     document.getElementById("customerNote").style.display = "none";
+  });
+
+  // Edit modal event listeners
+  const btnEditAddItem = document.getElementById("editAddItem");
+  const btnSaveEditServis = document.getElementById("saveEditServis");
+  const modalEditServis = document.getElementById("modalEditServis");
+  
+  btnEditAddItem.addEventListener("click", () => {
+    addEditItemRow();
+  });
+  
+  btnSaveEditServis.addEventListener("click", saveEditServis);
+  
+  // Reset edit form when modal is closed
+  modalEditServis.addEventListener("hidden.bs.modal", () => {
+    document.getElementById("editItemContainer").innerHTML = "";
+    document.getElementById("editServisId").value = "";
   });
   
   // Reset form when modal is closed (cancel or close without saving)
@@ -582,7 +600,334 @@ function setupEvent() {
     if (e.target.classList.contains("btn-view")) {
       showDetail(id);
     }
+    
+    if (e.target.classList.contains("btn-edit")) {
+      showEditModal(id);
+    }
   });
+}
+
+// ======================
+// SHOW EDIT MODAL
+// ======================
+function showEditModal(id) {
+  const data = getData(KEY);
+  const customers = getData(CUSTOMER_KEY);
+  const parts = getData(PART_KEY);
+  
+  const servis = data.find(s => s.id == id);
+  if (!servis) return;
+  
+  const customer = customers.find(c => c.id == servis.customerId);
+  
+  // Set hidden ID
+  document.getElementById("editServisId").value = servis.id;
+  
+  // Set read-only fields
+  document.getElementById("editTanggal").value = servis.tanggal;
+  document.getElementById("editCustomer").value = customer ? customer.name : "-";
+  
+  // Set catatan
+  document.getElementById("editCatatan").value = servis.catatan || "";
+  
+  // Clear and populate items
+  const container = document.getElementById("editItemContainer");
+  container.innerHTML = "";
+  
+  // Load existing items
+  servis.items.forEach(item => {
+    addEditItemRow(item);
+  });
+  
+  // Calculate initial total
+  updateEditTotal();
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById("modalEditServis"));
+  modal.show();
+}
+
+// ======================
+// ADD EDIT ITEM ROW
+// ======================
+function addEditItemRow(existingItem = null) {
+  const container = document.getElementById("editItemContainer");
+  
+  const rowId = "edit-row-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+  
+  const row = document.createElement("div");
+  row.className = "row g-2 mb-2 item-row edit-item-row";
+  row.id = rowId;
+  row.dataset.rowId = rowId;
+  
+  // Build datalist options
+  let options = ``;
+  const allParts = getData(PART_KEY);
+  allParts.forEach(p => {
+    const safeName = sanitizeHTML(p.name);
+    const stock = p.qty || 0;
+    const disabled = stock === 0 ? 'disabled' : '';
+    const stockInfo = stock === 0 ? ' (Stok: Habis)' : ` (Stok: ${stock})`;
+    options += `<option value="${safeName}" data-id="${p.id}" data-price="${p.price}" data-stock="${stock}" ${disabled}>${safeName}${stockInfo}</option>`;
+  });
+  
+  const partId = existingItem ? existingItem.partId || "" : "";
+  const partName = existingItem ? existingItem.name : "";
+  const price = existingItem ? existingItem.price : "";
+  const qty = existingItem ? existingItem.qty : 1;
+  
+  row.innerHTML = `
+    <div class="col-md-4">
+      <label class="form-label small">Sparepart</label>
+      <div class="input-group">
+        <input type="text" class="form-control part-input edit-part-input" placeholder="Cari sparepart..." list="editPartDatalist-${rowId}" value="${partName}">
+        <button type="button" class="btn btn-outline-secondary btn-clear-part" title="Hapus pilihan">✕</button>
+      </div>
+      <datalist id="editPartDatalist-${rowId}">${options}</datalist>
+      <input type="hidden" class="part-id edit-part-id" value="${partId}">
+      <div class="part-note small mt-1" style="display: none;"></div>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label small">Harga</label>
+      <input type="number" class="form-control item-price edit-item-price" placeholder="Harga" min="0" value="${price}" readonly>
+    </div>
+
+    <div class="col-md-3">
+      <label class="form-label small">Jumlah</label>
+      <div class="input-group">
+        <button class="btn btn-outline-secondary btn-minus" type="button">-</button>
+        <input type="number" class="form-control text-center item-qty edit-item-qty" value="${qty}" min="1">
+        <button class="btn btn-outline-secondary btn-plus" type="button">+</button>
+      </div>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+      <button class="btn btn-danger w-100 btn-remove edit-btn-remove">✕</button>
+    </div>
+  `;
+  
+  container.appendChild(row);
+  
+  // If existing item, set up the initial state
+  let qtyInput = row.querySelector(".item-qty");
+  if (existingItem) {
+    const partNote = row.querySelector(".part-note");
+    const allParts = getData(PART_KEY);
+    const part = allParts.find(p => p.id == partId);
+    if (part) {
+      const stock = part.qty || 0;
+      partNote.textContent = `Stok tersedia: ${stock}`;
+      partNote.style.display = "block";
+      partNote.className = stock > 0 ? "part-note small text-success mt-1" : "part-note small text-danger mt-1";
+      
+      // Set max quantity based on stock + original qty (since we're editing, stock was already reduced)
+      qtyInput.max = stock + qty;
+    }
+  }
+  
+  // References
+  const partInput = row.querySelector(".part-input");
+  const partIdInput = row.querySelector(".part-id");
+  const priceInput = row.querySelector(".item-price");
+  const partNote = row.querySelector(".part-note");
+  const btnPlus = row.querySelector(".btn-plus");
+  const btnMinus = row.querySelector(".btn-minus");
+  const btnClearPart = row.querySelector(".btn-clear-part");
+  const btnRemove = row.querySelector(".btn-remove");
+  
+  // Handle part selection from datalist
+  partInput.addEventListener("input", () => {
+    const datalist = row.querySelector(`#editPartDatalist-${rowId}`);
+    const selectedOption = Array.from(datalist.options).find(opt => opt.value === partInput.value);
+    
+    if (selectedOption && !selectedOption.disabled) {
+      partIdInput.value = selectedOption.dataset.id;
+      priceInput.value = selectedOption.dataset.price;
+      
+      const stock = parseInt(selectedOption.dataset.stock);
+      partNote.textContent = `Stok tersedia: ${stock}`;
+      partNote.style.display = "block";
+      partNote.className = stock > 0 ? "part-note small text-success mt-1" : "part-note small text-danger mt-1";
+      
+      // Set max quantity based on stock
+      qtyInput.max = stock;
+      if (parseInt(qtyInput.value) > stock) {
+        qtyInput.value = stock;
+      }
+    } else if (partInput.value) {
+      partIdInput.value = "";
+      partNote.textContent = "Sparepart tidak ditemukan";
+      partNote.style.display = "block";
+      partNote.className = "part-note small text-danger mt-1";
+    } else {
+      partIdInput.value = "";
+      partNote.style.display = "none";
+    }
+    updateEditTotal();
+  });
+  
+  // Clear part button
+  btnClearPart.addEventListener("click", () => {
+    partInput.value = "";
+    partIdInput.value = "";
+    priceInput.value = "";
+    qtyInput.value = 1;
+    partNote.style.display = "none";
+    updateEditTotal();
+  });
+  
+  // Quantity controls
+  btnMinus.addEventListener("click", () => {
+    let qty = parseInt(qtyInput.value);
+    if (qty > 1) {
+      qtyInput.value = qty - 1;
+      updateEditTotal();
+    }
+  });
+  
+  btnPlus.addEventListener("click", () => {
+    let qty = parseInt(qtyInput.value);
+    if (qty < parseInt(qtyInput.max)) {
+      qtyInput.value = qty + 1;
+      updateEditTotal();
+    }
+  });
+  
+  qtyInput.addEventListener("change", () => {
+    let qty = parseInt(qtyInput.value);
+    if (qty < 1) qtyInput.value = 1;
+    if (qtyInput.max && qty > parseInt(qtyInput.max)) qtyInput.value = qtyInput.max;
+    updateEditTotal();
+  });
+  
+  // Remove button
+  btnRemove.addEventListener("click", () => {
+    row.remove();
+    updateEditTotal();
+  });
+  
+  updateEditTotal();
+}
+
+// ======================
+// UPDATE EDIT TOTAL
+// ======================
+function updateEditTotal() {
+  const container = document.getElementById("editItemContainer");
+  const rows = container.querySelectorAll(".edit-item-row");
+  let total = 0;
+  
+  rows.forEach(row => {
+    const price = parseInt(row.querySelector(".item-price").value) || 0;
+    const qty = parseInt(row.querySelector(".item-qty").value) || 0;
+    total += price * qty;
+  });
+  
+  document.getElementById("editTotalDisplay").innerText = formatCurrency(total);
+}
+
+// ======================
+// GET EDIT ITEMS
+// ======================
+function getEditItems() {
+  const container = document.getElementById("editItemContainer");
+  const rows = container.querySelectorAll(".edit-item-row");
+  const items = [];
+  
+  rows.forEach(row => {
+    const partId = row.querySelector(".part-id").value;
+    const name = row.querySelector(".part-input").value;
+    const price = parseInt(row.querySelector(".item-price").value) || 0;
+    const qty = parseInt(row.querySelector(".item-qty").value) || 0;
+    
+    if (name && price > 0 && qty > 0) {
+      items.push({ partId, name, price, qty });
+    }
+  });
+  
+  return items;
+}
+
+// ======================
+// SAVE EDIT SERVIS
+// ======================
+function saveEditServis() {
+  const servisId = document.getElementById("editServisId").value;
+  const items = getEditItems();
+  const catatan = document.getElementById("editCatatan").value;
+  
+  // Validation
+  if (items.length === 0) {
+    alert("Minimal satu item servis harus ditambahkan");
+    return;
+  }
+  
+  // Calculate total
+  let total = 0;
+  items.forEach(item => {
+    total += item.price * item.qty;
+  });
+  
+  // Get existing servis data
+  const data = getData(KEY);
+  const oldServis = data.find(s => s.id == servisId);
+  
+  if (!oldServis) {
+    alert("Data servis tidak ditemukan");
+    return;
+  }
+  
+  // Confirmation
+  if (!confirm(`Konfirmasi Perubahan Servis:\n\nTotal baru: ${formatCurrency(total)}\n\nLanjutkan menyimpan?`)) {
+    return;
+  }
+  
+  // Adjust stock: return old items first, then reduce new items
+  const partData = getData(PART_KEY);
+  
+  // Return stock for old items
+  oldServis.items.forEach(oldItem => {
+    if (oldItem.partId) {
+      const partIndex = partData.findIndex(p => p.id == oldItem.partId);
+      if (partIndex !== -1) {
+        partData[partIndex].qty = (partData[partIndex].qty || 0) + oldItem.qty;
+      }
+    }
+  });
+  
+  // Reduce stock for new items
+  items.forEach(item => {
+    if (item.partId) {
+      const partIndex = partData.findIndex(p => p.id == item.partId);
+      if (partIndex !== -1) {
+        partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
+      }
+    }
+  });
+  
+  saveData(PART_KEY, partData);
+  
+  // Update servis data
+  const servisIndex = data.findIndex(s => s.id == servisId);
+  if (servisIndex !== -1) {
+    data[servisIndex].items = items;
+    data[servisIndex].total = total;
+    data[servisIndex].catatan = catatan;
+  }
+  
+  saveData(KEY, data);
+  
+  // Close modal and refresh table
+  const modalElement = document.getElementById("modalEditServis");
+  const modal = bootstrap.Modal.getInstance(modalElement);
+  if (modal) {
+    modal.hide();
+  }
+  
+  const searchInput = document.getElementById("searchServis");
+  const statusFilter = document.getElementById("filterStatus");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
 }
 
 // ======================
