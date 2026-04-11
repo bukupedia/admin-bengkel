@@ -74,6 +74,14 @@ function setupEvent() {
   const table = document.getElementById("partTable");
   const searchInput = document.getElementById("searchPart");
 
+  // Reset form when modal is closed (cancel or close without saving)
+  const modalPart = document.getElementById("modalPart");
+  modalPart.addEventListener("hidden.bs.modal", () => {
+    clearForm();
+    // Remove edit ID
+    delete document.getElementById("savePart").dataset.editId;
+  });
+
   // Search functionality with debounce
   let searchTimeout;
   searchInput.addEventListener("input", (e) => {
