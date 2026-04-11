@@ -286,7 +286,7 @@ function calculateTotal() {
   const items = [];
   
   rows.forEach(row => {
-    const name = row.querySelector(".item-name").value.trim();
+    const name = row.querySelector(".part-input").value.trim();
     const price = parseInt(row.querySelector(".item-price").value) || 0;
     const qty = parseInt(row.querySelector(".item-qty").value) || 0;
     const partId = row.querySelector(".part-id").value;
