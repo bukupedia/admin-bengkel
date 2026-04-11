@@ -357,7 +357,8 @@ function renderTable(searchQuery = "", statusFilter = "") {
     const statusMap = {
       "menunggu": { class: "secondary", text: "Menunggu" },
       "servicing": { class: "warning", text: "Diproses" },
-      "selesai": { class: "success", text: "Selesai" }
+      "selesai": { class: "success", text: "Selesai" },
+      "dibatalkan": { class: "danger", text: "Dibatalkan" }
     };
     const statusInfo = statusMap[item.status] || statusMap.menunggu;
     
@@ -372,10 +373,10 @@ function renderTable(searchQuery = "", statusFilter = "") {
         </td>
         <td>
           <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
-          ${item.status !== "selesai" ? `<button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Servis">✏</button>` : `<button class="btn btn-secondary btn-sm" disabled title="Tidak dapat edit">✏</button>`}
+          ${item.status === "menunggu" ? `<button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Servis">✏</button>` : `<button class="btn btn-secondary btn-sm" disabled title="Tidak dapat edit">✏</button>`}
           ${item.status === "menunggu" ? `<button class="btn btn-primary btn-sm btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
           ${item.status === "servicing" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
-          <button class="btn btn-danger btn-sm btn-delete" data-id="${item.id}" title="Hapus">🗑</button>
+          ${item.status === "menunggu" ? `<button class="btn btn-danger btn-sm btn-cancel" data-id="${item.id}" title="Batalkan Servis">Cancel</button>` : `<button class="btn btn-secondary btn-sm" disabled>Cancel</button>`}
         </td>
       </tr>
     `;
@@ -610,6 +611,10 @@ function setupEvent() {
     
     if (e.target.classList.contains("btn-delete")) {
       deleteServis(id);
+    }
+    
+    if (e.target.classList.contains("btn-cancel")) {
+      cancelServis(id);
     }
     
     if (e.target.classList.contains("btn-selesai")) {
@@ -999,7 +1004,7 @@ function showDetail(id) {
   document.getElementById("detailCustomer").textContent = customer ? customer.name : "-";
   document.getElementById("detailPoliceNumber").textContent = customer ? (customer.policeNumber || "-") : "-";
   document.getElementById("detailTanggal").textContent = formatDate(servis.tanggal);
-  const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Diproses" : "Menunggu");
+  const statusText = servis.status === "selesai" ? "Selesai" : (servis.status === "servicing" ? "Diproses" : (servis.status === "dibatalkan" ? "Dibatalkan" : "Menunggu"));
   document.getElementById("detailStatus").textContent = statusText;
   document.getElementById("detailTotal").textContent = formatCurrency(servis.total);
   
@@ -1031,6 +1036,44 @@ function deleteServis(id) {
   // Note: Tidak mengembalikan stok karena servis sudah dihapus
   let data = getData(KEY);
   data = data.filter(item => item.id != id);
+  
+  saveData(KEY, data);
+  const searchInput = document.getElementById("searchServis");
+  const statusFilter = document.getElementById("filterStatus");
+  renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
+}
+
+// ======================
+// CANCEL SERVIS
+// ======================
+function cancelServis(id) {
+  if (!confirm("Yakin ingin membatalkan servis ini?\n\nStok sparepart akan dikembalikan.")) return;
+  
+  let data = getData(KEY);
+  const servis = data.find(s => s.id == id);
+  
+  if (!servis) {
+    alert("Data servis tidak ditemukan");
+    return;
+  }
+  
+  // Return stock for each item
+  const partData = getData(PART_KEY);
+  servis.items.forEach(item => {
+    if (item.partId) {
+      const partIndex = partData.findIndex(p => p.id == item.partId);
+      if (partIndex !== -1) {
+        partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+      }
+    }
+  });
+  saveData(PART_KEY, partData);
+  
+  // Update status to dibatalkan
+  const servisIndex = data.findIndex(s => s.id == id);
+  if (servisIndex !== -1) {
+    data[servisIndex].status = "dibatalkan";
+  }
   
   saveData(KEY, data);
   const searchInput = document.getElementById("searchServis");
