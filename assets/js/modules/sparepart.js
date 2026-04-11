@@ -4,6 +4,7 @@ import { getData, saveData } from "../storage.js";
 import { generateId, sanitizeHTML, formatCurrency } from "../utils.js";
 
 const KEY = "parts";
+const SERVIS_KEY = "servis";
 
 function getSearchQuery() {
   const searchInput = document.getElementById("searchPart");
@@ -114,6 +115,12 @@ function setupEvent() {
       return;
     }
     priceInput.classList.remove("is-invalid");
+    
+    // Also ensure price is an integer
+    if (!Number.isInteger(price)) {
+      priceInput.classList.add("is-invalid");
+      return;
+    }
 
     // Validate quantity is a non-negative integer
     if (qty < 0 || isNaN(qty)) {
@@ -121,6 +128,12 @@ function setupEvent() {
       return;
     }
     qtyInput.classList.remove("is-invalid");
+    
+    // Also ensure quantity is an integer
+    if (!Number.isInteger(qty)) {
+      qtyInput.classList.add("is-invalid");
+      return;
+    }
 
     // Additional sanitization: trim and limit length
     const sanitizedName = name.substring(0, 100).replace(/[<>]/g, "");
@@ -188,7 +201,24 @@ function setupEvent() {
 // DELETE
 // ======================
 function deletePart(id) {
-  if (!confirm("Yakin ingin menghapus sparepart ini?")) return;
+  // Check if part is used in any servis
+  const servisData = getData(SERVIS_KEY);
+  const partData = getData(KEY);
+  const part = partData.find(p => p.id == id);
+  
+  let relatedServis = [];
+  if (part) {
+    relatedServis = servisData.filter(s => 
+      s.items && s.items.some(item => item.partId == id)
+    );
+  }
+  
+  let confirmMessage = "Yakin ingin menghapus sparepart ini?";
+  if (relatedServis.length > 0) {
+    confirmMessage = `Sparepart ini digunakan di ${relatedServis.length} record servis.\nHapus sparepart akan menyebabkan data tersebut tidak lengkap.\n\nApakah Anda tetap ingin menghapus?`;
+  }
+  
+  if (!confirm(confirmMessage)) return;
   
   let data = getData(KEY);
   data = data.filter(item => item.id != id);
