@@ -561,21 +561,8 @@ function setupEvent() {
       }
     });
     
-    if (stockErrors.length > 0) {
-      alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
-      return;
-    }
-    
-    // Reduce stock for parts used
-    items.forEach(item => {
-      if (item.partId) {
-        const partIndex = partData.findIndex(p => p.id == item.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
-        }
-      }
-    });
-    saveData(PART_KEY, partData);
+    // Stock is NOT reduced here - will be reduced when status changes to "selesai"
+    // This allows spareparts to remain available for other servis until job is completed
     
     const newServis = {
       id: generateId(),
@@ -662,9 +649,12 @@ function showEditModal(id) {
   const container = document.getElementById("editItemContainer");
   container.innerHTML = "";
   
+  // Pass completion status to item row loading for proper max qty calculation
+  const wasCompleted = servis.status === "selesai";
+  
   // Load existing items
   servis.items.forEach(item => {
-    addEditItemRow(item);
+    addEditItemRow(item, wasCompleted);
   });
   
   // Calculate initial total
@@ -678,7 +668,7 @@ function showEditModal(id) {
 // ======================
 // ADD EDIT ITEM ROW
 // ======================
-function addEditItemRow(existingItem = null) {
+function addEditItemRow(existingItem = null, wasCompleted = false) {
   const container = document.getElementById("editItemContainer");
   
   const rowId = "edit-row-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
@@ -751,8 +741,9 @@ function addEditItemRow(existingItem = null) {
       partNote.style.display = "block";
       partNote.className = stock > 0 ? "part-note small text-success mt-1" : "part-note small text-danger mt-1";
       
-      // Set max quantity based on stock + original qty (since we're editing, stock was already reduced)
-      qtyInput.max = stock + qty;
+      // If was completed, stock was already reduced, so add original qty to available stock
+      // If not completed, stock wasn't reduced yet, so use available stock as-is
+      qtyInput.max = wasCompleted ? (stock + qty) : stock;
     }
   }
   
@@ -913,59 +904,63 @@ function saveEditServis() {
     return;
   }
   
-  // Adjust stock: return old items first, then reduce new items
-  const partData = getData(PART_KEY);
+  const wasCompleted = oldServis.status === "selesai";
   
-  // First, return old items stock
-  oldServis.items.forEach(oldItem => {
-    if (oldItem.partId) {
-      const partIndex = partData.findIndex(p => p.id == oldItem.partId);
-      if (partIndex !== -1) {
-        partData[partIndex].qty = (partData[partIndex].qty || 0) + oldItem.qty;
-      }
-    }
-  });
-  
-  // Check stock availability for new items after returning old stock
-  const stockErrors = [];
-  items.forEach(item => {
-    if (item.partId) {
-      const part = partData.find(p => p.id == item.partId);
-      if (part) {
-        const currentStock = part.qty || 0;
-        if (item.qty > currentStock) {
-          stockErrors.push(`• ${item.name}: Stok tidak cukup (tersedia: ${currentStock}, diperlukan: ${item.qty})`);
-        }
-      }
-    }
-  });
-  
-  // Return old items stock back if there's a stock error
-  if (stockErrors.length > 0) {
-    // Revert the stock return
+  // Only adjust stock if servis was already completed
+  if (wasCompleted) {
+    const partData = getData(PART_KEY);
+    
+    // First, return old items stock
     oldServis.items.forEach(oldItem => {
       if (oldItem.partId) {
         const partIndex = partData.findIndex(p => p.id == oldItem.partId);
         if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) - oldItem.qty;
+          partData[partIndex].qty = (partData[partIndex].qty || 0) + oldItem.qty;
         }
       }
     });
-    alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
-    return;
-  }
-  
-  // Reduce stock for new items
-  items.forEach(item => {
-    if (item.partId) {
-      const partIndex = partData.findIndex(p => p.id == item.partId);
-      if (partIndex !== -1) {
-        partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
+    
+    // Check stock availability for new items after returning old stock
+    const stockErrors = [];
+    items.forEach(item => {
+      if (item.partId) {
+        const part = partData.find(p => p.id == item.partId);
+        if (part) {
+          const currentStock = part.qty || 0;
+          if (item.qty > currentStock) {
+            stockErrors.push(`• ${item.name}: Stok tidak cukup (tersedia: ${currentStock}, diperlukan: ${item.qty})`);
+          }
+        }
       }
+    });
+    
+    // Return old items stock back if there's a stock error
+    if (stockErrors.length > 0) {
+      // Revert the stock return
+      oldServis.items.forEach(oldItem => {
+        if (oldItem.partId) {
+          const partIndex = partData.findIndex(p => p.id == oldItem.partId);
+          if (partIndex !== -1) {
+            partData[partIndex].qty = (partData[partIndex].qty || 0) - oldItem.qty;
+          }
+        }
+      });
+      alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
+      return;
     }
-  });
-  
-  saveData(PART_KEY, partData);
+    
+    // Reduce stock for new items
+    items.forEach(item => {
+      if (item.partId) {
+        const partIndex = partData.findIndex(p => p.id == item.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
+        }
+      }
+    });
+    
+    saveData(PART_KEY, partData);
+  }
   
   // Update servis data
   const servisIndex = data.findIndex(s => s.id == servisId);
@@ -1033,8 +1028,23 @@ function showDetail(id) {
 function deleteServis(id) {
   if (!confirm("Yakin ingin menghapus data servis ini?")) return;
   
-  // Note: Tidak mengembalikan stok karena servis sudah dihapus
   let data = getData(KEY);
+  const servis = data.find(s => s.id == id);
+  
+  // Return stock if servis was completed (selesai)
+  if (servis && servis.status === "selesai") {
+    const partData = getData(PART_KEY);
+    servis.items.forEach(item => {
+      if (item.partId) {
+        const partIndex = partData.findIndex(p => p.id == item.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+        }
+      }
+    });
+    saveData(PART_KEY, partData);
+  }
+  
   data = data.filter(item => item.id != id);
   
   saveData(KEY, data);
@@ -1047,8 +1057,6 @@ function deleteServis(id) {
 // CANCEL SERVIS
 // ======================
 function cancelServis(id) {
-  if (!confirm("Yakin ingin membatalkan servis ini?\n\nStok sparepart akan dikembalikan.")) return;
-  
   let data = getData(KEY);
   const servis = data.find(s => s.id == id);
   
@@ -1057,17 +1065,28 @@ function cancelServis(id) {
     return;
   }
   
-  // Return stock for each item
-  const partData = getData(PART_KEY);
-  servis.items.forEach(item => {
-    if (item.partId) {
-      const partIndex = partData.findIndex(p => p.id == item.partId);
-      if (partIndex !== -1) {
-        partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+  // Stock is only returned if servis was completed (selesai)
+  const wasCompleted = servis.status === "selesai";
+  let confirmMsg = "Yakin ingin membatalkan servis ini?";
+  if (wasCompleted) {
+    confirmMsg = "Yakin ingin membatalkan servis ini?\n\nStok sparepart akan dikembalikan.";
+  }
+  
+  if (!confirm(confirmMsg)) return;
+  
+  // Return stock only if servis was completed
+  if (wasCompleted) {
+    const partData = getData(PART_KEY);
+    servis.items.forEach(item => {
+      if (item.partId) {
+        const partIndex = partData.findIndex(p => p.id == item.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+        }
       }
-    }
-  });
-  saveData(PART_KEY, partData);
+    });
+    saveData(PART_KEY, partData);
+  }
   
   // Update status to dibatalkan
   const servisIndex = data.findIndex(s => s.id == id);
@@ -1086,6 +1105,64 @@ function cancelServis(id) {
 // ======================
 function updateStatus(id, newStatus) {
   let data = getData(KEY);
+  const servis = data.find(s => s.id == id);
+  
+  if (!servis) {
+    alert("Data servis tidak ditemukan");
+    return;
+  }
+  
+  const oldStatus = servis.status;
+  
+  // Handle stock when changing to "selesai" (completed)
+  if (newStatus === "selesai" && oldStatus !== "selesai") {
+    const partData = getData(PART_KEY);
+    const stockErrors = [];
+    
+    // Check stock availability before reducing
+    servis.items.forEach(item => {
+      if (item.partId) {
+        const part = partData.find(p => p.id == item.partId);
+        if (part) {
+          const currentStock = part.qty || 0;
+          if (item.qty > currentStock) {
+            stockErrors.push(`• ${item.name}: Stok tidak cukup (tersedia: ${currentStock}, diperlukan: ${item.qty})`);
+          }
+        }
+      }
+    });
+    
+    if (stockErrors.length > 0) {
+      alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
+      return;
+    }
+    
+    // Reduce stock for each item
+    servis.items.forEach(item => {
+      if (item.partId) {
+        const partIndex = partData.findIndex(p => p.id == item.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
+        }
+      }
+    });
+    saveData(PART_KEY, partData);
+  }
+  
+  // Handle stock when changing FROM "selesai" to another status (return stock)
+  if (oldStatus === "selesai" && newStatus !== "selesai") {
+    const partData = getData(PART_KEY);
+    
+    servis.items.forEach(item => {
+      if (item.partId) {
+        const partIndex = partData.findIndex(p => p.id == item.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+        }
+      }
+    });
+    saveData(PART_KEY, partData);
+  }
   
   data = data.map(item => {
     if (item.id == id) item.status = newStatus;
