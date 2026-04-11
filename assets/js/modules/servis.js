@@ -145,7 +145,7 @@ function addItemRow() {
     <div class="col-md-4">
       <label class="form-label small">Sparepart</label>
       <div class="input-group">
-        <input type="text" class="form-control part-input" placeholder="Cari sparepart..." list="partDatalist-${rowId}" readonly>
+        <input type="text" class="form-control part-input" placeholder="Cari sparepart..." list="partDatalist-${rowId}">
         <button type="button" class="btn btn-outline-secondary btn-clear-part" title="Hapus pilihan">✕</button>
       </div>
       <datalist id="partDatalist-${rowId}">${options}</datalist>
