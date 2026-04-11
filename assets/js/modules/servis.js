@@ -449,6 +449,12 @@ function setupEvent() {
     document.getElementById("customerNote").style.display = "none";
   });
   
+  // Reset form when modal is closed (cancel or close without saving)
+  const modalServis = document.getElementById("modalServis");
+  modalServis.addEventListener("hidden.bs.modal", () => {
+    resetForm();
+  });
+  
   // Add item
   btnAddItem.addEventListener("click", addItemRow);
   
