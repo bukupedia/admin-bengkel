@@ -286,7 +286,7 @@ function calculateTotal() {
   const items = [];
   
   rows.forEach(row => {
-    const name = row.querySelector(".item-name").value.trim();
+    const name = row.querySelector(".part-input").value.trim();
     const price = parseInt(row.querySelector(".item-price").value) || 0;
     const qty = parseInt(row.querySelector(".item-qty").value) || 0;
     const partId = row.querySelector(".part-id").value;
@@ -542,7 +542,13 @@ function setupEvent() {
     const searchInput = document.getElementById("searchServis");
     const statusFilter = document.getElementById("filterStatus");
     renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
-    closeModal();
+    
+    // Close modal using Bootstrap
+    const modalElement = document.getElementById("modalServis");
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    if (modal) {
+      modal.hide();
+    }
   });
   
   // Table action
@@ -639,7 +645,10 @@ function updateStatus(id, newStatus) {
 // RESET FORM
 // ======================
 function resetForm() {
-  document.getElementById("tanggal").value = "";
+  // Reset to today's date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById("tanggal").value = today;
+  
   document.getElementById("customerInput").value = "";
   document.getElementById("customerSelect").value = "";
   document.getElementById("itemContainer").innerHTML = "";
