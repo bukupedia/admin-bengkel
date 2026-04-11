@@ -373,7 +373,7 @@ function renderTable(searchQuery = "", statusFilter = "") {
         </td>
         <td>
           <button class="btn btn-info btn-sm btn-view" data-id="${item.id}" title="Lihat Detail">👁</button>
-          ${item.status === "menunggu" ? `<button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Servis">✏</button>` : `<button class="btn btn-secondary btn-sm" disabled title="Tidak dapat edit">✏</button>`}
+          ${(item.status === "menunggu" || item.status === "servicing") ? `<button class="btn btn-warning btn-sm btn-edit" data-id="${item.id}" title="Edit Servis">✏</button>` : `<button class="btn btn-secondary btn-sm" disabled title="Tidak dapat edit">✏</button>`}
           ${item.status === "menunggu" ? `<button class="btn btn-primary btn-sm btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
           ${item.status === "servicing" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
           ${item.status === "menunggu" ? `<button class="btn btn-danger btn-sm btn-cancel" data-id="${item.id}" title="Batalkan Servis">Cancel</button>` : `<button class="btn btn-secondary btn-sm" disabled>Cancel</button>`}
