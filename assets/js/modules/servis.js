@@ -68,8 +68,9 @@ function renderCustomerDatalist(customers = null) {
   datalist.innerHTML = "";
   custData.forEach(c => {
     const safeName = sanitizeHTML(c.name);
-    const police = c.policeNumber ? ` (${sanitizeHTML(c.policeNumber)})` : "";
-    datalist.innerHTML += `<option value="${safeName}${police}" data-id="${c.id}" data-police="${c.policeNumber || ''}">`;
+    const safePolice = sanitizeHTML(c.policeNumber || "");
+    const police = safePolice ? ` (${safePolice})` : "";
+    datalist.innerHTML += `<option value="${safeName}${police}" data-id="${c.id}" data-police="${safePolice}">`;
   });
   
   // Handle selection
@@ -137,8 +138,10 @@ function addItemRow() {
     const safeName = sanitizeHTML(p.name);
     const stock = p.qty || 0;
     const disabled = stock === 0 ? 'disabled' : '';
-    const stockInfo = stock === 0 ? ' (Stok: Habis)' : ` (Stok: ${stock})`;
-    options += `<option value="${safeName}" data-id="${p.id}" data-price="${p.price}" data-stock="${stock}" ${disabled}>${safeName}${stockInfo}</option>`;
+    // Sanitize stock info to prevent XSS
+    const stockText = stock === 0 ? 'Stok: Habis' : `Stok: ${stock}`;
+    const safeStockText = sanitizeHTML(stockText);
+    options += `<option value="${safeName}" data-id="${p.id}" data-price="${p.price}" data-stock="${stock}" ${disabled}>${safeName} (${safeStockText})</option>`;
   });
   
   row.innerHTML = `
@@ -541,8 +544,28 @@ function setupEvent() {
       return;
     }
     
-    // Reduce stock for parts used
+    // Check stock availability before saving
     const partData = getData(PART_KEY);
+    const stockErrors = [];
+    
+    items.forEach(item => {
+      if (item.partId) {
+        const part = partData.find(p => p.id == item.partId);
+        if (part) {
+          const currentStock = part.qty || 0;
+          if (item.qty > currentStock) {
+            stockErrors.push(`• ${item.name}: Stok tidak cukup (tersedia: ${currentStock}, diperlukan: ${item.qty})`);
+          }
+        }
+      }
+    });
+    
+    if (stockErrors.length > 0) {
+      alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
+      return;
+    }
+    
+    // Reduce stock for parts used
     items.forEach(item => {
       if (item.partId) {
         const partIndex = partData.findIndex(p => p.id == item.partId);
@@ -625,7 +648,7 @@ function showEditModal(id) {
   
   // Set read-only fields
   document.getElementById("editTanggal").value = servis.tanggal;
-  document.getElementById("editCustomer").value = customer ? customer.name : "-";
+  document.getElementById("editCustomer").value = customer ? sanitizeHTML(customer.name) : "-";
   
   // Set catatan
   document.getElementById("editCatatan").value = servis.catatan || "";
@@ -667,12 +690,14 @@ function addEditItemRow(existingItem = null) {
     const safeName = sanitizeHTML(p.name);
     const stock = p.qty || 0;
     const disabled = stock === 0 ? 'disabled' : '';
-    const stockInfo = stock === 0 ? ' (Stok: Habis)' : ` (Stok: ${stock})`;
-    options += `<option value="${safeName}" data-id="${p.id}" data-price="${p.price}" data-stock="${stock}" ${disabled}>${safeName}${stockInfo}</option>`;
+    // Sanitize stock info to prevent XSS
+    const stockText = stock === 0 ? 'Stok: Habis' : `Stok: ${stock}`;
+    const safeStockText = sanitizeHTML(stockText);
+    options += `<option value="${safeName}" data-id="${p.id}" data-price="${p.price}" data-stock="${stock}" ${disabled}>${safeName} (${safeStockText})</option>`;
   });
   
   const partId = existingItem ? existingItem.partId || "" : "";
-  const partName = existingItem ? existingItem.name : "";
+  const partName = existingItem ? sanitizeHTML(existingItem.name) : "";
   const price = existingItem ? existingItem.price : "";
   const qty = existingItem ? existingItem.qty : 1;
   
@@ -886,7 +911,7 @@ function saveEditServis() {
   // Adjust stock: return old items first, then reduce new items
   const partData = getData(PART_KEY);
   
-  // Return stock for old items
+  // First, return old items stock
   oldServis.items.forEach(oldItem => {
     if (oldItem.partId) {
       const partIndex = partData.findIndex(p => p.id == oldItem.partId);
@@ -895,6 +920,35 @@ function saveEditServis() {
       }
     }
   });
+  
+  // Check stock availability for new items after returning old stock
+  const stockErrors = [];
+  items.forEach(item => {
+    if (item.partId) {
+      const part = partData.find(p => p.id == item.partId);
+      if (part) {
+        const currentStock = part.qty || 0;
+        if (item.qty > currentStock) {
+          stockErrors.push(`• ${item.name}: Stok tidak cukup (tersedia: ${currentStock}, diperlukan: ${item.qty})`);
+        }
+      }
+    }
+  });
+  
+  // Return old items stock back if there's a stock error
+  if (stockErrors.length > 0) {
+    // Revert the stock return
+    oldServis.items.forEach(oldItem => {
+      if (oldItem.partId) {
+        const partIndex = partData.findIndex(p => p.id == oldItem.partId);
+        if (partIndex !== -1) {
+          partData[partIndex].qty = (partData[partIndex].qty || 0) - oldItem.qty;
+        }
+      }
+    });
+    alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
+    return;
+  }
   
   // Reduce stock for new items
   items.forEach(item => {
