@@ -5,16 +5,39 @@ import { generateId, sanitizeHTML, formatCurrency } from "../utils.js";
 
 const KEY = "parts";
 const SERVIS_KEY = "servis";
+const LOW_STOCK_THRESHOLD = 5; // Alert when stock is below this
 
 function getSearchQuery() {
   const searchInput = document.getElementById("searchPart");
   return searchInput ? searchInput.value.toLowerCase() : "";
 }
 
+// GET LOW STOCK ITEMS
+function getLowStockItems() {
+  const data = getData(KEY);
+  return data.filter(item => (item.qty || 0) <= LOW_STOCK_THRESHOLD);
+}
+
+// SHOW LOW STOCK WARNING
+function showLowStockWarning() {
+  const lowStockItems = getLowStockItems();
+  if (lowStockItems.length > 0) {
+    const message = `⚠️ Peringatan Stok Rendah:\n\n` + 
+      lowStockItems.map(item => `• ${item.name}: ${item.qty} unit`).join("\n") +
+      `\n\nSegera lakukan restok untuk menjaga kelancaran servis.`;
+    // Only show warning once per session (use sessionStorage to track)
+    if (!sessionStorage.getItem("lowStockWarningShown")) {
+      alert(message);
+      sessionStorage.setItem("lowStockWarningShown", "true");
+    }
+  }
+}
+
 // INIT
 export function initSparepartPage() {
   renderTable(getSearchQuery());
   setupEvent();
+  showLowStockWarning();
 }
 
 // ======================
