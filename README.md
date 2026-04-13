@@ -1,6 +1,6 @@
-# [Beta-19] Changes Made
+# [Alpha-19] Changes Made
 
-Codebase: beta-18
+Codebase: alpha-18
 
 Fix issues in servis.html and servis.js:
 
