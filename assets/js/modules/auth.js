@@ -78,19 +78,13 @@ function isRateLimited() {
   return false;
 }
 
-// Get remaining lockout time in seconds
-export function getLockoutTimeRemaining() {
-  const timeSinceLastAttempt = Date.now() - lastLoginAttempt;
-  const remaining = LOCKOUT_DURATION - timeSinceLastAttempt;
-  return remaining > 0 ? Math.ceil(remaining / 1000) : 0;
-}
-
 // Login function - In production, this should call a secure backend API
 // Authentication should be handled server-side with proper password hashing
 export function login(username, password) {
   // Check rate limiting
   if (isRateLimited()) {
-    const remaining = getLockoutTimeRemaining();
+    const timeSinceLastAttempt = Date.now() - lastLoginAttempt;
+    const remaining = Math.ceil((LOCKOUT_DURATION - timeSinceLastAttempt) / 1000);
     return { 
       success: false, 
       message: `Terlalu banyak percobaan login. Coba lagi dalam ${remaining} detik.` 
