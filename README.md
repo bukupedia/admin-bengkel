@@ -1,4 +1,4 @@
-# [Beta-6] Changes Made
+# [Alpha-6] Changes Made
 
 1. **servis.html** - Mengubah placeholder input pencarian menjadi lebih informatif:
    ```html
