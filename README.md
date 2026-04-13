@@ -1,6 +1,6 @@
-# [Beta-17] Changes Made
+# [Alpha-17] Changes Made
 
-Codebase: beta-16
+Codebase: alpha-16
 
 Audit dan perbaikan pada file `servis.html` dan `servis.js`. Berikut ringkasan perubahan:
 
