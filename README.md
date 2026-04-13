@@ -1,6 +1,6 @@
-# [Beta-15] Changes Made
+# [Alpha-15] Changes Made
 
-Codebase: beta-14
+Codebase: alpha-14
 
 ## Pada Modal Tambah Servis:
 
