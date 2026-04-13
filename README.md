@@ -1,6 +1,6 @@
-# [Beta-21] Changes Made
+# [Alpha-21] Changes Made
 
-Codebase: beta-20
+Codebase: alpha-20
 
 Menambahkan functionality reset form pada semua modal:
 
