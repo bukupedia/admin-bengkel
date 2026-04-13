@@ -1,6 +1,6 @@
-# [Beta-22] Changes Made
+# [Alpha-22] Changes Made
 
-Codebase: beta-21
+Codebase: alpha-21
 
 Menambahkan fitur Edit Servis
 
