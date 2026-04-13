@@ -8,7 +8,7 @@ const CUSTOMER_KEY = "customers";
 const PART_KEY = "parts";
 
 // Date filter state
-let dateFilter = "today"; // "today", "yesterday", or "custom"
+let dateFilter = "all"; // "all", "today", "week", "month", or "custom"
 let customDate = "";
 
 // ======================
@@ -28,21 +28,34 @@ function getYesterdayString() {
 }
 
 // ======================
+// GET DATE OFFSET STRING
+// ======================
+function getDateOffsetString(days) {
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().split('T')[0];
+}
+
+// ======================
 // GET FILTERED DATE RANGE
 // ======================
 function getDateFilterRange() {
   const today = getTodayString();
-  const yesterday = getYesterdayString();
   
-  if (dateFilter === "today") {
+  if (dateFilter === "all") {
+    // Return a very wide range to include all dates
+    return { start: "1970-01-01", end: "2100-12-31" };
+  } else if (dateFilter === "today") {
     return { start: today, end: today };
-  } else if (dateFilter === "yesterday") {
-    return { start: yesterday, end: yesterday };
+  } else if (dateFilter === "week") {
+    return { start: getDateOffsetString(7), end: today };
+  } else if (dateFilter === "month") {
+    return { start: getDateOffsetString(30), end: today };
   } else if (dateFilter === "custom" && customDate) {
     return { start: customDate, end: customDate };
   }
-  // Default to today
-  return { start: today, end: today };
+  // Default to all
+  return { start: "1970-01-01", end: "2100-12-31" };
 }
 
 // ======================
@@ -55,8 +68,8 @@ export function initServisPage() {
   tanggalInput.value = today;
   tanggalInput.min = today;
   
-  // Set default date filter to today
-  dateFilter = "today";
+  // Set default date filter to all
+  dateFilter = "all";
   
   renderCustomerDatalist();
   const searchInput = document.getElementById("searchServis");
