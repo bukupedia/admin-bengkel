@@ -1,4 +1,4 @@
-# [Beta-3] Changes Made
+# [Alpha-3] Changes Made
 
 ### 1. Created Missing CSS File
 - Created `/css/style.css` with comprehensive styling including:
