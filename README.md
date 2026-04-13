@@ -1,6 +1,6 @@
-# [Beta-25] Changes Made
+# [Alpha-25] Changes Made
 
-Codebase: beta-24
+Codebase: alpha-24
 
 Focus on auto Stock Management. audit code, find bugs, and fix issues
 
