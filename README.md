@@ -1,6 +1,6 @@
-# [Beta-18] Changes Made
+# [Alpha-18] Changes Made
 
-Codebase: beta-14
+Codebase: alpha-14
 
 **Pada Modal Tambah Servis (servis.html & servis.js):**
 
