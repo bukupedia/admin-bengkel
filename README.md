@@ -1,4 +1,4 @@
-# [Beta-7] Changes Made
+# [Alpha-7] Changes Made
 
 1. **Ubah judul kolom 'Status Antrian' pada halaman servis menjadi 'Status'** ✅
    - File: `servis.html` - Kolom header diubah dari "Status Antrian" menjadi "Status"
