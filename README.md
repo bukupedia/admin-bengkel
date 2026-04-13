@@ -1,4 +1,4 @@
-# [Beta-1] Changes Made
+# [Alpha-1] Changes Made
 
 ## Security Improvements ✅
 1. **Authentication System** - Created proper login/logout with session management
