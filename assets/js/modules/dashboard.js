@@ -13,34 +13,55 @@ export function initDashboardPage() {
 }
 
 // ======================
+// GET TODAY'S DATE STRING
+// ======================
+function getTodayString() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// ======================
+// GET YESTERDAY'S DATE STRING
+// ======================
+function getYesterdayString() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+}
+
+// ======================
 // LOAD DASHBOARD DATA
 // ======================
 function loadDashboardData() {
-  const servisData = getData(SERVIS_KEY);
+  const allServisData = getData(SERVIS_KEY);
   const customerData = getData(CUSTOMER_KEY);
   const partData = getData(PART_KEY);
   
-  // Calculate total servis
+  // Filter servis data for today only
+  const today = getTodayString();
+  const servisData = allServisData.filter(s => s.tanggal === today);
+  
+  // Calculate total servis (today)
   const totalServis = servisData.length;
   
-  // Calculate counts by status
+  // Calculate counts by status (today)
   const servisMenunggu = servisData.filter(s => s.status === "menunggu").length;
   const servisDiproses = servisData.filter(s => s.status === "servicing").length;
   const servisSelesai = servisData.filter(s => s.status === "selesai").length;
   const servisDibatalkan = servisData.filter(s => s.status === "dibatalkan").length;
   
-  // Calculate total pendapatan (only from completed ones)
+  // Calculate total pendapatan (today, only from completed ones)
   const totalPendapatan = servisData
     .filter(s => s.status === "selesai")
     .reduce((sum, s) => sum + (s.total || 0), 0);
   
-  // Calculate total customers
-  const totalPelanggan = customerData.length;
+  // Calculate total customers created today
+  const todayCustomers = customerData.filter(c => c.createdAt && c.createdAt.startsWith(today));
+  const totalPelanggan = todayCustomers.length;
   
   // Calculate total sparepart
   const totalSparepart = partData.length;
   
-  // Update UI
+  // Update UI - Hari Ini
   document.getElementById("totalServis").textContent = totalServis;
   document.getElementById("servisMenunggu").textContent = servisMenunggu;
   document.getElementById("servisDiproses").textContent = servisDiproses;
@@ -59,8 +80,57 @@ function loadDashboardData() {
   animateValue("totalPelanggan", 0, totalPelanggan, 500);
   animateValue("totalSparepart", 0, totalSparepart, 500);
   
-  // Render recent servis
+  // Render recent servis (today)
   renderRecentServis(servisData);
+  
+  // ======================
+  // LOAD OVERALL DATA (Keseluruhan)
+  // ======================
+  loadOverallData(allServisData, customerData, partData);
+}
+
+// ======================
+// LOAD OVERALL DATA (Keseluruhan)
+// ======================
+function loadOverallData(allServisData, customerData, partData) {
+  // Calculate overall total servis
+  const totalServisOverall = allServisData.length;
+  
+  // Calculate counts by status (overall)
+  const servisMenungguOverall = allServisData.filter(s => s.status === "menunggu").length;
+  const servisDiprosesOverall = allServisData.filter(s => s.status === "servicing").length;
+  const servisSelesaiOverall = allServisData.filter(s => s.status === "selesai").length;
+  const servisDibatalkanOverall = allServisData.filter(s => s.status === "dibatalkan").length;
+  
+  // Calculate total pendapatan (overall, only from completed ones)
+  const totalPendapatanOverall = allServisData
+    .filter(s => s.status === "selesai")
+    .reduce((sum, s) => sum + (s.total || 0), 0);
+  
+  // Calculate total customers (overall)
+  const totalPelangganOverall = customerData.length;
+  
+  // Calculate total sparepart (overall)
+  const totalSparepartOverall = partData.length;
+  
+  // Update UI - Keseluruhan
+  document.getElementById("totalServisOverall").textContent = totalServisOverall;
+  document.getElementById("servisMenungguOverall").textContent = servisMenungguOverall;
+  document.getElementById("servisDiprosesOverall").textContent = servisDiprosesOverall;
+  document.getElementById("servisSelesaiOverall").textContent = servisSelesaiOverall;
+  document.getElementById("servisDibatalkanOverall").textContent = servisDibatalkanOverall;
+  document.getElementById("totalPelangganOverall").textContent = totalPelangganOverall;
+  document.getElementById("totalSparepartOverall").textContent = totalSparepartOverall;
+  document.getElementById("totalPendapatanOverall").textContent = formatCurrency(totalPendapatanOverall);
+  
+  // Add animation for overall status counts
+  animateValue("totalServisOverall", 0, totalServisOverall, 500);
+  animateValue("servisMenungguOverall", 0, servisMenungguOverall, 500);
+  animateValue("servisDiprosesOverall", 0, servisDiprosesOverall, 500);
+  animateValue("servisSelesaiOverall", 0, servisSelesaiOverall, 500);
+  animateValue("servisDibatalkanOverall", 0, servisDibatalkanOverall, 500);
+  animateValue("totalPelangganOverall", 0, totalPelangganOverall, 500);
+  animateValue("totalSparepartOverall", 0, totalSparepartOverall, 500);
 }
 
 // ======================
