@@ -80,8 +80,11 @@ function loadDashboardData() {
   animateValue("totalPelanggan", 0, totalPelanggan, 500);
   animateValue("totalSparepart", 0, totalSparepart, 500);
   
-  // Render recent servis (today)
-  renderRecentServis(servisData);
+  // Render recent servis (all, not just today)
+  renderRecentServis(allServisData);
+  
+  // Render low stock parts
+  renderLowStockParts(partData);
   
   // ======================
   // LOAD OVERALL DATA (Keseluruhan)
@@ -209,6 +212,53 @@ function renderRecentServis(data) {
             <div class="text-end">
               <div class="fw-bold">${formatCurrency(item.total)}</div>
               <span class="badge bg-${statusInfo.class}">${statusInfo.text}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================
+// RENDER LOW STOCK PARTS
+// ======================
+function renderLowStockParts(data) {
+  const container = document.getElementById("lowStockParts");
+  if (!container) return;
+  
+  // Filter parts with stock less than 5
+  const lowStockData = data.filter(p => (p.qty || 0) < 5);
+  
+  // Sort by stock (lowest first)
+  lowStockData.sort((a, b) => (a.qty || 0) - (b.qty || 0));
+  
+  if (lowStockData.length === 0) {
+    container.innerHTML = `
+      <div class="text-center text-muted py-4">
+        <p class="mb-1">🔩</p>
+        <p>Semua sparepart memiliki stok mencukupi</p>
+        <small>Stok sparepart &gt;= 5</small>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = lowStockData.map(item => {
+    const stock = item.qty || 0;
+    const stockClass = stock === 0 ? 'text-danger' : (stock < 3 ? 'text-warning' : 'text-muted');
+    
+    return `
+      <div class="card mb-2">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong>${sanitizeHTML(item.name)}</strong>
+              <br>
+              <small class="text-muted">${formatCurrency(item.price)}</small>
+            </div>
+            <div class="text-end">
+              <span class="badge ${stock === 0 ? 'bg-danger' : 'bg-warning'}">Stok: ${stock}</span>
             </div>
           </div>
         </div>
