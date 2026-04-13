@@ -1,4 +1,4 @@
-# [Beta-2] Changes Made
+# [Alpha-2] Changes Made
 
 **Created new CSS file:**
 - `responsive-table.css` - Contains responsive table styles
