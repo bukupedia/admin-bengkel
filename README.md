@@ -1,6 +1,6 @@
-# [Beta-24] Changes Made
+# [Alpha-24] Changes Made
 
-Codebase: beta-23
+Codebase: alpha-23
 
 ## Halaman Servis (servis.html & servis.js):
 
