@@ -1,6 +1,6 @@
-# [Beta-16] Changes Made
+# [Alpha-16] Changes Made
 
-Codebase: beta-14
+Codebase: alpha-14
 
 ## Pada Modal Tambah Servis:
 1. **Nama Pelanggan dan Nomor Polisi** - Sekarang readonly dan dipilih dari dropdown. Jika tidak ditemukan, akan muncul pesan error "Nama pelanggan tidak ditemukan dalam daftar"
