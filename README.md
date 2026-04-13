@@ -1,4 +1,4 @@
-# [Beta-10] Changes Made
+# [Alpha-10] Changes Made
 
 ## Ringkasan Perubahan
 
