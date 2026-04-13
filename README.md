@@ -1,6 +1,6 @@
-# [Beta-20] Changes Made
+# [Alpha-20] Changes Made
 
-Codebase: beta-18
+Codebase: alpha-18
 
 Fixed 3 bugs in the 'Tambah Servis' modal:
 
