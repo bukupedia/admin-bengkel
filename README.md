@@ -1,4 +1,4 @@
-# [Beta-8] Changes Made
+# [Alpha-8] Changes Made
 
 **sparepart.html:**
 - Menambahkan kolom "Quantity" pada tabel header
