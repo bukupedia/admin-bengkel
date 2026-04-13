@@ -1,6 +1,6 @@
-# [Beta-14] Changes Made
+# [Alpha-14] Changes Made
 
-Codebase: beta-9
+Codebase: alpha-9
 
 ## Fitur yang Ditambahkan:
 
