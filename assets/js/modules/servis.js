@@ -7,15 +7,56 @@ const KEY = "servis";
 const CUSTOMER_KEY = "customers";
 const PART_KEY = "parts";
 
+// Date filter state
+let dateFilter = "today"; // "today", "yesterday", or "custom"
+let customDate = "";
+
+// ======================
+// GET TODAY'S DATE STRING
+// ======================
+function getTodayString() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// ======================
+// GET YESTERDAY'S DATE STRING
+// ======================
+function getYesterdayString() {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday.toISOString().split('T')[0];
+}
+
+// ======================
+// GET FILTERED DATE RANGE
+// ======================
+function getDateFilterRange() {
+  const today = getTodayString();
+  const yesterday = getYesterdayString();
+  
+  if (dateFilter === "today") {
+    return { start: today, end: today };
+  } else if (dateFilter === "yesterday") {
+    return { start: yesterday, end: yesterday };
+  } else if (dateFilter === "custom" && customDate) {
+    return { start: customDate, end: customDate };
+  }
+  // Default to today
+  return { start: today, end: today };
+}
+
 // ======================
 // INIT
 // ======================
 export function initServisPage() {
   // Set today's date as default and minimum date
-  const today = new Date().toISOString().split('T')[0];
+  const today = getTodayString();
   const tanggalInput = document.getElementById("tanggal");
   tanggalInput.value = today;
   tanggalInput.min = today;
+  
+  // Set default date filter to today
+  dateFilter = "today";
   
   renderCustomerDatalist();
   const searchInput = document.getElementById("searchServis");
@@ -25,6 +66,7 @@ export function initServisPage() {
   addItemRow(); // default 1 row
   setupSearch();
   setupStatusFilter();
+  setupDateFilter();
 }
 
 // ======================
@@ -35,6 +77,45 @@ function setupStatusFilter() {
   statusFilter.addEventListener("change", () => {
     const searchInput = document.getElementById("searchServis");
     renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter.value);
+  });
+}
+
+// ======================
+// DATE FILTER
+// ======================
+function setupDateFilter() {
+  const filterTanggal = document.getElementById("filterTanggal");
+  const customDateContainer = document.getElementById("customDateContainer");
+  const customDateInput = document.getElementById("filterCustomDate");
+  
+  filterTanggal.addEventListener("change", () => {
+    dateFilter = filterTanggal.value;
+    
+    // Show/hide custom date input
+    if (dateFilter === "custom") {
+      customDateContainer.style.display = "block";
+      // Set custom date to today by default if empty
+      if (!customDateInput.value) {
+        customDateInput.value = getTodayString();
+        customDate = customDateInput.value;
+      }
+    } else {
+      customDateContainer.style.display = "none";
+      customDate = "";
+    }
+    
+    // Render table with new date filter
+    const searchInput = document.getElementById("searchServis");
+    const statusFilter = document.getElementById("filterStatus");
+    renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
+  });
+  
+  // Handle custom date change
+  customDateInput.addEventListener("change", () => {
+    customDate = customDateInput.value;
+    const searchInput = document.getElementById("searchServis");
+    const statusFilter = document.getElementById("filterStatus");
+    renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
   });
 }
 
@@ -351,10 +432,17 @@ function renderTable(searchQuery = "", statusFilter = "") {
   const customers = getData(CUSTOMER_KEY);
   const table = document.getElementById("servisTable");
   
+  // Get date filter range
+  const dateRange = getDateFilterRange();
+  
   table.innerHTML = "";
   
+  // Filter by date range
+  let filteredData = data.filter(item => {
+    return item.tanggal >= dateRange.start && item.tanggal <= dateRange.end;
+  });
+  
   // Filter by search query and status
-  let filteredData = data;
   if (searchQuery) {
     filteredData = filteredData.filter(item => {
       const customer = customers.find(c => c.id == item.customerId);
