@@ -281,6 +281,39 @@ function getPartStock(partId) {
 }
 
 // ======================
+// STOCK HELPER FUNCTIONS (refactored to avoid duplication)
+// ======================
+function returnStock(items) {
+  if (!items || items.length === 0) return;
+  
+  const partData = getData(PART_KEY);
+  items.forEach(item => {
+    if (item.partId) {
+      const partIndex = partData.findIndex(p => p.id == item.partId);
+      if (partIndex !== -1) {
+        partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
+      }
+    }
+  });
+  saveData(PART_KEY, partData);
+}
+
+function reduceStock(items) {
+  if (!items || items.length === 0) return;
+  
+  const partData = getData(PART_KEY);
+  items.forEach(item => {
+    if (item.partId) {
+      const partIndex = partData.findIndex(p => p.id == item.partId);
+      if (partIndex !== -1) {
+        partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
+      }
+    }
+  });
+  saveData(PART_KEY, partData);
+}
+
+// ======================
 // HITUNG TOTAL
 // ======================
 function calculateTotal() {
@@ -911,14 +944,7 @@ function saveEditServis() {
     const partData = getData(PART_KEY);
     
     // First, return old items stock
-    oldServis.items.forEach(oldItem => {
-      if (oldItem.partId) {
-        const partIndex = partData.findIndex(p => p.id == oldItem.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) + oldItem.qty;
-        }
-      }
-    });
+    returnStock(oldServis.items);
     
     // Check stock availability for new items after returning old stock
     const stockErrors = [];
@@ -937,29 +963,13 @@ function saveEditServis() {
     // Return old items stock back if there's a stock error
     if (stockErrors.length > 0) {
       // Revert the stock return
-      oldServis.items.forEach(oldItem => {
-        if (oldItem.partId) {
-          const partIndex = partData.findIndex(p => p.id == oldItem.partId);
-          if (partIndex !== -1) {
-            partData[partIndex].qty = (partData[partIndex].qty || 0) - oldItem.qty;
-          }
-        }
-      });
+      reduceStock(oldServis.items);
       alert("Stok Tidak Mencukupi:\n" + stockErrors.join("\n"));
       return;
     }
     
     // Reduce stock for new items
-    items.forEach(item => {
-      if (item.partId) {
-        const partIndex = partData.findIndex(p => p.id == item.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
-        }
-      }
-    });
-    
-    saveData(PART_KEY, partData);
+    reduceStock(items);
   }
   
   // Update servis data
@@ -1033,16 +1043,7 @@ function deleteServis(id) {
   
   // Return stock if servis was completed (selesai)
   if (servis && servis.status === "selesai") {
-    const partData = getData(PART_KEY);
-    servis.items.forEach(item => {
-      if (item.partId) {
-        const partIndex = partData.findIndex(p => p.id == item.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
-        }
-      }
-    });
-    saveData(PART_KEY, partData);
+    returnStock(servis.items);
   }
   
   data = data.filter(item => item.id != id);
@@ -1076,16 +1077,7 @@ function cancelServis(id) {
   
   // Return stock only if servis was completed
   if (wasCompleted) {
-    const partData = getData(PART_KEY);
-    servis.items.forEach(item => {
-      if (item.partId) {
-        const partIndex = partData.findIndex(p => p.id == item.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
-        }
-      }
-    });
-    saveData(PART_KEY, partData);
+    returnStock(servis.items);
   }
   
   // Update status to dibatalkan
@@ -1138,30 +1130,12 @@ function updateStatus(id, newStatus) {
     }
     
     // Reduce stock for each item
-    servis.items.forEach(item => {
-      if (item.partId) {
-        const partIndex = partData.findIndex(p => p.id == item.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) - item.qty;
-        }
-      }
-    });
-    saveData(PART_KEY, partData);
+    reduceStock(servis.items);
   }
   
   // Handle stock when changing FROM "selesai" to another status (return stock)
   if (oldStatus === "selesai" && newStatus !== "selesai") {
-    const partData = getData(PART_KEY);
-    
-    servis.items.forEach(item => {
-      if (item.partId) {
-        const partIndex = partData.findIndex(p => p.id == item.partId);
-        if (partIndex !== -1) {
-          partData[partIndex].qty = (partData[partIndex].qty || 0) + item.qty;
-        }
-      }
-    });
-    saveData(PART_KEY, partData);
+    returnStock(servis.items);
   }
   
   data = data.map(item => {
