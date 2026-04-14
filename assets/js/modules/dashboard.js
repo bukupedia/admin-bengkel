@@ -68,7 +68,6 @@ function loadDashboardData() {
   document.getElementById("servisSelesai").textContent = servisSelesai;
   document.getElementById("servisDibatalkan").textContent = servisDibatalkan;
   document.getElementById("totalPelanggan").textContent = totalPelanggan;
-  document.getElementById("totalSparepart").textContent = totalSparepart;
   document.getElementById("totalPendapatan").textContent = formatCurrency(totalPendapatan);
   
   // Add animation for status counts
@@ -78,13 +77,16 @@ function loadDashboardData() {
   animateValue("servisSelesai", 0, servisSelesai, 500);
   animateValue("servisDibatalkan", 0, servisDibatalkan, 500);
   animateValue("totalPelanggan", 0, totalPelanggan, 500);
-  animateValue("totalSparepart", 0, totalSparepart, 500);
   
   // Render recent servis (all, not just today)
   renderRecentServis(allServisData);
   
   // Render low stock parts
   renderLowStockParts(partData);
+  
+  // Render top selling parts
+  renderTopSellingParts(allServisData);
+  renderTopSellingPartsToday(allServisData);
   
   // ======================
   // LOAD OVERALL DATA (Keseluruhan)
@@ -113,9 +115,6 @@ function loadOverallData(allServisData, customerData, partData) {
   // Calculate total customers (overall)
   const totalPelangganOverall = customerData.length;
   
-  // Calculate total sparepart (overall)
-  const totalSparepartOverall = partData.length;
-  
   // Update UI - Keseluruhan
   document.getElementById("totalServisOverall").textContent = totalServisOverall;
   document.getElementById("servisMenungguOverall").textContent = servisMenungguOverall;
@@ -123,7 +122,6 @@ function loadOverallData(allServisData, customerData, partData) {
   document.getElementById("servisSelesaiOverall").textContent = servisSelesaiOverall;
   document.getElementById("servisDibatalkanOverall").textContent = servisDibatalkanOverall;
   document.getElementById("totalPelangganOverall").textContent = totalPelangganOverall;
-  document.getElementById("totalSparepartOverall").textContent = totalSparepartOverall;
   document.getElementById("totalPendapatanOverall").textContent = formatCurrency(totalPendapatanOverall);
   
   // Add animation for overall status counts
@@ -133,7 +131,6 @@ function loadOverallData(allServisData, customerData, partData) {
   animateValue("servisSelesaiOverall", 0, servisSelesaiOverall, 500);
   animateValue("servisDibatalkanOverall", 0, servisDibatalkanOverall, 500);
   animateValue("totalPelangganOverall", 0, totalPelangganOverall, 500);
-  animateValue("totalSparepartOverall", 0, totalSparepartOverall, 500);
 }
 
 // ======================
@@ -259,6 +256,156 @@ function renderLowStockParts(data) {
             </div>
             <div class="text-end">
               <span class="badge ${stock === 0 ? 'bg-danger' : 'bg-warning'}">Stok: ${stock}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================
+// RENDER TOP SELLING PARTS (All Time)
+// ======================
+function renderTopSellingParts(data) {
+  const container = document.getElementById("topSellingParts");
+  if (!container) return;
+  
+  // Get all servis with "selesai" status (completed)
+  const allServisData = getData(SERVIS_KEY).filter(s => s.status === "selesai");
+  
+  // Count parts sold
+  const partCount = {};
+  allServisData.forEach(servis => {
+    if (servis.items && Array.isArray(servis.items)) {
+      servis.items.forEach(item => {
+        if (item.partId) {
+          if (!partCount[item.partId]) {
+            partCount[item.partId] = {
+              name: item.name,
+              qty: 0,
+              price: item.price
+            };
+          }
+          partCount[item.partId].qty += item.qty || 0;
+        }
+      });
+    }
+  });
+  
+  // Convert to array and sort by quantity (highest first)
+  const sortedParts = Object.entries(partCount)
+    .map(([id, info]) => ({
+      id,
+      name: info.name,
+      qty: info.qty,
+      price: info.price
+    }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5); // Top 5
+  
+  if (sortedParts.length === 0) {
+    container.innerHTML = `
+      <div class="text-center text-muted py-4">
+        <p class="mb-1">🏆</p>
+        <p>Belum ada data penjualan sparepart</p>
+        <small>Data penjualan akan muncul setelah servis selesai</small>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = sortedParts.map((item, index) => {
+    const rankEmoji = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : (index + 4)));
+    
+    return `
+      <div class="card mb-2">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="me-2">${rankEmoji}</span>
+              <strong>${sanitizeHTML(item.name)}</strong>
+              <br>
+              <small class="text-muted">${formatCurrency(item.price)}</small>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success">Terjual: ${item.qty}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ======================
+// RENDER TOP SELLING PARTS (Today)
+// ======================
+function renderTopSellingPartsToday(data) {
+  const container = document.getElementById("topSellingPartsToday");
+  if (!container) return;
+  
+  const today = getTodayString();
+  
+  // Get today's servis with "selesai" status
+  const todayServisData = getData(SERVIS_KEY).filter(s => s.status === "selesai" && s.tanggal === today);
+  
+  // Count parts sold today
+  const partCount = {};
+  todayServisData.forEach(servis => {
+    if (servis.items && Array.isArray(servis.items)) {
+      servis.items.forEach(item => {
+        if (item.partId) {
+          if (!partCount[item.partId]) {
+            partCount[item.partId] = {
+              name: item.name,
+              qty: 0,
+              price: item.price
+            };
+          }
+          partCount[item.partId].qty += item.qty || 0;
+        }
+      });
+    }
+  });
+  
+  // Convert to array and sort by quantity (highest first)
+  const sortedParts = Object.entries(partCount)
+    .map(([id, info]) => ({
+      id,
+      name: info.name,
+      qty: info.qty,
+      price: info.price
+    }))
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 5); // Top 5
+  
+  if (sortedParts.length === 0) {
+    container.innerHTML = `
+      <div class="text-center text-muted py-4">
+        <p class="mb-1">🏆</p>
+        <p>Belum ada penjualan sparepart hari ini</p>
+        <small>Data penjualan akan muncul setelah servis selesai</small>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = sortedParts.map((item, index) => {
+    const rankEmoji = index === 0 ? '🥇' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : (index + 4)));
+    
+    return `
+      <div class="card mb-2">
+        <div class="card-body py-2">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <span class="me-2">${rankEmoji}</span>
+              <strong>${sanitizeHTML(item.name)}</strong>
+              <br>
+              <small class="text-muted">${formatCurrency(item.price)}</small>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-success">Terjual: ${item.qty}</span>
             </div>
           </div>
         </div>
