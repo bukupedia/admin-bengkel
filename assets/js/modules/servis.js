@@ -543,11 +543,24 @@ function renderTable(searchQuery = "", statusFilter = "") {
       waMessage = "Status servis kendaraan Anda telah Dibatalkan. Berikan Saran dan Kritik Anda melalui nomor ini. Saran dan Kritik yang Anda berikan akan membantu kami untuk menjadi lebih baik. Terimakasih telah berkunjung ke Bengkel Kami!. Hormat Kami.";
     }
     
-    // Encode message for WhatsApp
+    // WhatsApp - send to customer's phone number
+    const formatWhatsAppNumber = (phone) => {
+      if (!phone) return "";
+      const digits = phone.replace(/\D/g, "");
+      if (digits.startsWith("0")) {
+        return "62" + digits.substring(1);
+      } else if (digits.startsWith("62")) {
+        return digits;
+      }
+      return "62" + digits;
+    };
+    const customerWaNumber = customerPhone ? formatWhatsAppNumber(customerPhone) : "";
+
+    // Encode message for WhatsApp - send to customer's number
     const encodedMessage = encodeURIComponent(waMessage);
-    const waHref = `https://wa.me/${DEFAULT_WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const waHref = customerWaNumber ? `https://wa.me/${customerWaNumber}?text=${encodedMessage}` : "#";
     const waDisabled = !customerPhone ? "disabled" : "";
-    const waTitle = !customerPhone ? "Nomor HP tidak tersedia" : "Kirim WhatsApp";
+    const waTitle = !customerPhone ? "Nomor HP tidak tersedia" : "Kirim WhatsApp ke Pelanggan";
     
     table.innerHTML += `
       <tr>
