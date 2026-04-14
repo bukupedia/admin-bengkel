@@ -11,6 +11,13 @@ const PART_KEY = "parts";
 let dateFilter = "all"; // "all", "today", "week", "month", or "custom"
 let customDate = "";
 
+// Pagination state
+let currentPage = 1;
+const itemsPerPage = 10;
+
+// WhatsApp default number
+const DEFAULT_WHATSAPP_NUMBER = "0895332782122";
+
 // ======================
 // GET TODAY'S DATE STRING
 // ======================
@@ -88,6 +95,7 @@ export function initServisPage() {
 function setupStatusFilter() {
   const statusFilter = document.getElementById("filterStatus");
   statusFilter.addEventListener("change", () => {
+    currentPage = 1; // Reset to page 1
     const searchInput = document.getElementById("searchServis");
     renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter.value);
   });
@@ -103,6 +111,7 @@ function setupDateFilter() {
   
   filterTanggal.addEventListener("change", () => {
     dateFilter = filterTanggal.value;
+    currentPage = 1; // Reset to page 1
     
     // Show/hide custom date input
     if (dateFilter === "custom") {
@@ -126,6 +135,7 @@ function setupDateFilter() {
   // Handle custom date change
   customDateInput.addEventListener("change", () => {
     customDate = customDateInput.value;
+    currentPage = 1; // Reset to page 1
     const searchInput = document.getElementById("searchServis");
     const statusFilter = document.getElementById("filterStatus");
     renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
@@ -143,6 +153,7 @@ function setupSearch() {
   searchInput.addEventListener("input", (e) => {
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
+      currentPage = 1; // Reset to page 1
       const query = e.target.value.toLowerCase();
       const statusFilter = document.getElementById("filterStatus");
       renderTable(query, statusFilter ? statusFilter.value : "");
@@ -470,21 +481,45 @@ function renderTable(searchQuery = "", statusFilter = "") {
     filteredData = filteredData.filter(item => item.status === statusFilter);
   }
   
-  if (filteredData.length === 0) {
-    table.innerHTML = `<tr><td colspan="6" class="text-center py-4">
+  // Sort by date (newest first)
+  filteredData.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+  
+  // Calculate pagination
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  
+  // Reset to page 1 if current page is out of range
+  if (currentPage < 1) currentPage = 1;
+  if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
+  if (totalPages === 0) currentPage = 1;
+  
+  // Get current page data
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedData = filteredData.slice(startIndex, endIndex);
+  
+  if (paginatedData.length === 0) {
+    table.innerHTML = `<tr><td colspan="7" class="text-center py-4">
       <div class="text-muted">
         <p class="mb-1">🔧</p>
         <p>${searchQuery || statusFilter ? "Tidak ada hasil pencarian" : "Belum ada data servis"}</p>
         <small>${searchQuery || statusFilter ? "Coba kata kunci lain" : "Klik tombol 'Tambah Servis' untuk menambah data"}</small>
       </div>
     </td></tr>`;
+    // Also remove pagination container if exists
+    const paginationContainer = document.getElementById("paginationContainer");
+    if (paginationContainer) {
+      paginationContainer.innerHTML = "";
+    }
     return;
   }
   
-  filteredData.forEach(item => {
+  // Render table rows
+  paginatedData.forEach(item => {
     const customer = customers.find(c => c.id == item.customerId);
     const customerName = customer ? sanitizeHTML(customer.name) : "-";
     const customerPoliceNumber = customer ? sanitizeHTML(customer.policeNumber || "-") : "-";
+    const customerPhone = customer ? (customer.phone || "") : "";
     const safeTanggal = sanitizeHTML(item.tanggal);
     
     // Status badges
@@ -495,6 +530,24 @@ function renderTable(searchQuery = "", statusFilter = "") {
       "dibatalkan": { class: "danger", text: "Dibatalkan" }
     };
     const statusInfo = statusMap[item.status] || statusMap.menunggu;
+    
+    // WhatsApp message based on status
+    let waMessage = "";
+    if (item.status === "menunggu") {
+      waMessage = "Kendaraan Anda akan segera kami tangani. Harap menunggu. Informasi status kendaraan Anda akan dikirimkan melalui nomor ini. Terimakasih";
+    } else if (item.status === "servicing") {
+      waMessage = "Pelanggan yang terhormat, Terimakasih sudah menunggu. Kendaraan Anda sedang ditangani oleh mekanik kami";
+    } else if (item.status === "selesai") {
+      waMessage = "Terimakasih sudah menunggu. Kendaraan Anda sudah selesai kami tangani.";
+    } else if (item.status === "dibatalkan") {
+      waMessage = "Status servis kendaraan Anda telah Dibatalkan. Berikan Saran dan Kritik Anda melalui nomor ini. Saran dan Kritik yang Anda berikan akan membantu kami untuk menjadi lebih baik. Terimakasih telah berkunjung ke Bengkel Kami!. Hormat Kami.";
+    }
+    
+    // Encode message for WhatsApp
+    const encodedMessage = encodeURIComponent(waMessage);
+    const waHref = `https://wa.me/${DEFAULT_WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    const waDisabled = !customerPhone ? "disabled" : "";
+    const waTitle = !customerPhone ? "Nomor HP tidak tersedia" : "Kirim WhatsApp";
     
     table.innerHTML += `
       <tr>
@@ -511,10 +564,105 @@ function renderTable(searchQuery = "", statusFilter = "") {
           ${item.status === "menunggu" ? `<button class="btn btn-primary btn-sm btn-start" data-id="${item.id}" title="Mulai Servis">▶</button>` : ''}
           ${item.status === "servicing" ? `<button class="btn btn-success btn-sm btn-selesai" data-id="${item.id}" title="Tandai Selesai">✓</button>` : ''}
           ${item.status === "menunggu" ? `<button class="btn btn-danger btn-sm btn-cancel" data-id="${item.id}" title="Batalkan Servis">Cancel</button>` : `<button class="btn btn-secondary btn-sm" disabled>Cancel</button>`}
+          <a href="${waHref}" class="btn btn-success btn-sm" ${waDisabled} target="_blank" title="${waTitle}">📱</a>
         </td>
       </tr>
     `;
   });
+  
+  // Render pagination
+  renderPagination(totalPages, totalItems);
+}
+
+// ======================
+// RENDER PAGINATION
+// ======================
+function renderPagination(totalPages, totalItems) {
+  // Check if container exists
+  let paginationContainer = document.getElementById("paginationContainer");
+  if (!paginationContainer) {
+    // Create container if it doesn't exist
+    const table = document.getElementById("servisTable");
+    if (!table) return;
+    
+    paginationContainer = document.createElement("div");
+    paginationContainer.id = "paginationContainer";
+    paginationContainer.className = "d-flex justify-content-between align-items-center mt-3";
+    table.parentNode.parentNode.appendChild(paginationContainer);
+  }
+  
+  // Clear container
+  paginationContainer.innerHTML = "";
+  
+  if (totalPages <= 1) {
+    paginationContainer.innerHTML = `<small class="text-muted">Menampilkan ${totalItems} data</small>`;
+    return;
+  }
+  
+  // Info text
+  const infoDiv = document.createElement("div");
+  infoDiv.innerHTML = `<small class="text-muted">Menampilkan ${((currentPage - 1) * itemsPerPage) + 1}-${Math.min(currentPage * itemsPerPage, totalItems)} dari ${totalItems} data</small>`;
+  
+  // Pagination buttons
+  const paginationDiv = document.createElement("div");
+  paginationDiv.className = "d-flex gap-1";
+  
+  // Previous button
+  const prevBtn = document.createElement("button");
+  prevBtn.className = `btn btn-sm btn-outline-secondary ${currentPage === 1 ? "disabled" : ""}`;
+  prevBtn.textContent = "‹";
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      const searchInput = document.getElementById("searchServis");
+      const statusFilter = document.getElementById("filterStatus");
+      renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
+    }
+  });
+  if (currentPage === 1) {
+    prevBtn.setAttribute("disabled", "disabled");
+  }
+  paginationDiv.appendChild(prevBtn);
+  
+  // Page numbers - show at most 5 pages
+  let startPage = Math.max(1, currentPage - 2);
+  let endPage = Math.min(totalPages, startPage + 4);
+  if (endPage - startPage < 4) {
+    startPage = Math.max(1, endPage - 4);
+  }
+  
+  for (let i = startPage; i <= endPage; i++) {
+    const pageBtn = document.createElement("button");
+    pageBtn.className = `btn btn-sm ${i === currentPage ? "btn-primary" : "btn-outline-secondary"}`;
+    pageBtn.textContent = i;
+    pageBtn.addEventListener("click", () => {
+      currentPage = i;
+      const searchInput = document.getElementById("searchServis");
+      const statusFilter = document.getElementById("filterStatus");
+      renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
+    });
+    paginationDiv.appendChild(pageBtn);
+  }
+  
+  // Next button
+  const nextBtn = document.createElement("button");
+  nextBtn.className = `btn btn-sm btn-outline-secondary ${currentPage === totalPages ? "disabled" : ""}`;
+  nextBtn.textContent = "›";
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      const searchInput = document.getElementById("searchServis");
+      const statusFilter = document.getElementById("filterStatus");
+      renderTable(searchInput ? searchInput.value.toLowerCase() : "", statusFilter ? statusFilter.value : "");
+    }
+  });
+  if (currentPage === totalPages) {
+    nextBtn.setAttribute("disabled", "disabled");
+  }
+  paginationDiv.appendChild(nextBtn);
+  
+  paginationContainer.appendChild(infoDiv);
+  paginationContainer.appendChild(paginationDiv);
 }
 
 // ======================
